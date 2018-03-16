@@ -93,7 +93,7 @@ Broadcast=True
 ResetNetSpeed=20000
 MinimumNetSpeed=8000
 MaximumNetSpeed=20000
-MapExceptions=CTF-BT-BasicGayMap-v2,
+MapExceptions=CTF-BT-BasicGayMap-v2,CTF-BT-Slide1337
 ```
 
 ### Moverlag Fix
