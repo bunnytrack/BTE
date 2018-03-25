@@ -88,7 +88,7 @@ Timer scaling
 Timer Red/Green/Blue colors
 - !tc 255 0 255
 - !tcolor 1 33 7
-- !tcolour <red> <green> <blue>
+- !tcolour <red> yo<green>1 <blue>2
 
 Individual colors
 - !TRed 255
