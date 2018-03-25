@@ -30,11 +30,6 @@ Configurable settings for the server such as a netspeed limiter and a fix for la
 - Team colorized playername shown when F5'ing/spectating.
 - Simplified playername and health when aiming on a player.
 
-### Mutate commands
-Stop F5'ing
-- Mutate ResetView
-
-
 ### Say commands
 Show all Commands / Help
 
@@ -95,6 +90,10 @@ Timer Red/Green/Blue colors
 - !TRed 255 or !tr 255
 - !TGreen 0 or !tg 0
 - !TBlue 255 or !tb 255
+
+### Mutate commands
+Stop F5'ing
+- Mutate ResetView
 
 ### Netspeed limiter
 The Netspeed limiter prevents players from using unallowed netspeed values.    
