@@ -63,6 +63,15 @@ Disable all of the above features
 
 - !Disable
 
+Personal skincolors for Players
+
+- !rskin or !RedSkin
+- !bskin or !BlueSkin
+- !gskin or !GreenSkin
+- !yskin or !YellowSkin
+- !BlackSkin or !GraySkin
+- !NoSkin
+
 Enable/Disable custom Timer
 
 - !Timer
