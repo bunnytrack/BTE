@@ -23,7 +23,7 @@ Configurable settings for the server such as a netspeed limiter and a fix for la
 - Removed clientmessages when switching between players or viewing from own camera.
 
 ### HUD
-- Timer scaling and customizable color.
+- Customizable Timer scale, location and color.
 - Boots charges shown on HUD.
 - A Speed meter showing horizontal and vertical momentum of the player.
 - Other player's Timer, Speed, Boots and Armor shown on your HUD when F5'ing/specating.
@@ -86,10 +86,14 @@ Timer scaling
 - !TimerScale 1 or !tscale 1.5
 
 Timer Red/Green/Blue colors
+- !tc 255 0 255
+- !tcolor 1 33 7
+- !tcolour <red> <green> <blue>
 
-- !TRed 255 or !tr 255
-- !TGreen 0 or !tg 0
-- !TBlue 255 or !tb 255
+Individual colors
+- !TRed 255
+- !TGreen 0
+- !TBlue <number between 0 and 255>
 
 ### Mutate commands
 Stop F5'ing
@@ -98,7 +102,7 @@ Stop F5'ing
 ### Netspeed limiter
 The Netspeed limiter prevents players from using unallowed netspeed values.    
 Players that attempt to change their netspeed to an unallowed value will automatically suicide and are unable to play.       
-Extra options are to automatically kick the player, correct the player's netspeed or/and to broadcast a message to all players.
+Extra options are to automatically kick the player, correct the player's netspeed and/or broadcast a message to all players.
 
 Inside `BTE.ini` you can add maps as an exceptions to where the netspeed limiter should be disabled.    
 As an admin you can use the command `mutate nsmap` to add the current map to the exceptions list.
@@ -137,4 +141,4 @@ LagMovers[1]=ExampleMover1,AssertMover3,furymover4_3,leetmover7:CTF-BT-epicmap
 5. Restart your server
 
 ## Version
-2018-03-24
+2018-03-25
