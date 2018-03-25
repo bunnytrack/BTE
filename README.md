@@ -30,6 +30,11 @@ Configurable settings for the server such as a netspeed limiter and a fix for la
 - Team colorized playername shown when F5'ing/spectating.
 - Simplified playername and health when aiming on a player.
 
+### Mutate commands
+Stop F5'ing
+- Mutate ResetView
+
+
 ### Say commands
 Show all Commands / Help
 
@@ -65,10 +70,10 @@ Disable all of the above features
 
 Personal skincolors for Players
 
-- !rskin or !RedSkin
-- !bskin or !BlueSkin
-- !gskin or !GreenSkin
-- !yskin or !YellowSkin
+- !RedSkin or !rskin 
+- !BlueSkin or !bskin
+- !GreenSkin or !gskin
+- !YellowSkin or !yskin
 - !BlackSkin or !GraySkin
 - !NoSkin
 
