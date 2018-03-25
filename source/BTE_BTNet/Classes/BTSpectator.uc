@@ -380,9 +380,9 @@ exec function ViewClass(class<actor> aClass, optional bool bQuiet)
 defaultproperties
 {
 	Texture=None
-	bCollideActors=false
-	bCollideWorld=false
-	bBlockActors=false
-	bBlockPlayers=false
-	bProjTarget=false
+	bCollideActors=False
+	bCollideWorld=False
+	bBlockActors=False
+	bBlockPlayers=False
+	bProjTarget=False
 }

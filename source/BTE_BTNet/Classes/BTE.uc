@@ -3,8 +3,8 @@
 //=============================================================================
 class BTE expands Mutator config(BTE);
 
-var config bool NetSpeedLimiter, KickPlayer, Broadcast;
-var config int ResetNetSpeed, MinimumNetSpeed, MaximumNetSpeed;
+var config bool NetSpeedLimiter, KickPlayer, Broadcast, AutoCorrectNetSpeed;
+var config int CorrectNetSpeed, MinimumNetSpeed, MaximumNetSpeed;
 var config string MapExceptions;
 
 var config bool FixLagMovers;
@@ -70,38 +70,41 @@ function tick(float DeltaTime)
 {
 	local BTPPHUDNotify N;
 
-	Counter++;
-	if(Counter < 1000)
+	if( !IsInState('GameEnded') )
 	{
-		foreach AllActors(class'BTPPHUDNotify', N)
+		Counter++;
+		if(Counter < 1000)
 		{
-			if(N != None)
+			foreach AllActors(class'BTPPHUDNotify', N)
 			{
-				//	setting a complete BT HUD as default HUD
-				Level.Game.HUDType = class'BTHUD_BTNet';
-				//	destroy BTPPHUDNotify to prevent BT++' HUDMutator from spawning
-				N.Destroy();
-				//	keeps actors visible when seeing through BSP
-				if(int(ConsoleCommand("GET IPDRV.TCPNETDRIVER RELEVANTTIMEOUT")) < 1200)
-					ConsoleCommand("SET IPDRV.TCPNETDRIVER RELEVANTTIMEOUT 1200");
+				if(N != None)
+				{
+					//	New BT HUD as default HUD
+					Level.Game.HUDType = class'BTHUD_BTNet';
+					//	Destroy BTPPHUDNotify to prevent BT++' HUDMutator from spawning
+					N.Destroy();
+					//	keep actors visible for 1200+ seconds when seeing through BSP
+					if(int(ConsoleCommand("GET IPDRV.TCPNETDRIVER RELEVANTTIMEOUT")) < 1200)
+						ConsoleCommand("SET IPDRV.TCPNETDRIVER RELEVANTTIMEOUT 1200");
 
-				log("+-----------------");
-				log("| * BT Enhancements Enabled");
-				Log("| BTPPHUDNotify Destroyed");
-				Log("| TickCounter: " $ Counter);
-				log("+-----------------");
-				GotoState('Enabled');
+					log("+-----------------");
+					log("| * BT Enhancements Enabled");
+					Log("| BTPPHUDNotify Destroyed");
+					Log("| TickCounter: " $ Counter);
+					log("+-----------------");
+					GotoState('Enabled');
+				}
 			}
 		}
-	}
-	else
-	{
-		log("+-----------------");
-		log("| * BT Enhancements Disabled");
-		Log("| BTPPHUDNotify was not found");
-		Log("| TickCounter: " $ Counter);
-		log("+-----------------");
-		Destroy();
+		else
+		{
+			log("+-----------------");
+			log("| * BT Enhancements Disabled");
+			Log("| BTPPHUDNotify was not found");
+			Log("| TickCounter: " $ Counter);
+			log("+-----------------");
+			Destroy();
+		}
 	}
 }
 //=============================================================================
@@ -145,7 +148,7 @@ function InitNewSpec(PlayerPawn PP)
 	i = FindFreeSISlot();
 
 	SI[i].PP = PP;
-	SI[i].BTEC = Spawn(class'BTEUser.BTEClientData', PP);
+	SI[i].BTEC = Spawn(class'BTEUser1.BTEClientData', PP);
 }
 function int FindFreeSISlot()
 {
@@ -169,14 +172,16 @@ function InitNewPlayer(PlayerPawn PP)
 	i = FindFreePISlot();
 
 	PI[i].PP = PP;
-	PI[i].BTEC = Spawn(class'BTEUser.BTEClientData', PP);
+	PI[i].BTEC = Spawn(class'BTEUser1.BTEClientData', PP);
 	PI[i].EPRI = Spawn(class'BTEPRI', PP);
+	PI[i].EPRI.BTEC = PI[i].BTEC;
 	PI[i].EPRI.PlayerID = PP.PlayerReplicationInfo.PlayerID;
 	PI[i].EPRI.PP = PP;
 	PI[i].EPRI.NetSpeedLimiter = bNetSpeedLimiter;
 	PI[i].EPRI.KickPlayer = KickPlayer;
 	PI[i].EPRI.Broadcast = Broadcast;
-	PI[i].EPRI.ResetNetSpeed = ResetNetSpeed;
+	PI[i].EPRI.AutoCorrectNetSpeed = AutoCorrectNetSpeed;
+	PI[i].EPRI.CorrectNetSpeed = CorrectNetSpeed;
 	PI[i].EPRI.MinimumNetSpeed = MinimumNetSpeed;
 	PI[i].EPRI.MaximumNetSpeed = MaximumNetSpeed;
 }
@@ -219,12 +224,15 @@ function int FindPP(PlayerPawn PP)
 	}
 }
 //=============================================================================
-// MUTATE CHECKPOINT	-> TELEPORT BIND
+// MUTATE CHECKPOINT	-> SPECTATOR TELEPORT BIND
 // MUTATE LAGMOVER		-> SWITCH LAG MOVER
 // MUTATE NSMAP			-> Add current map to MapExceptions
+// MUTATE XSKIN			-> SkinColors for Players
 //=============================================================================
 function Mutate(string MutateString, PlayerPawn Sender)
 {
+	local BTEPRI BPRI;
+
 	Super.Mutate(MutateString, Sender);
 
 	switch MutateString
@@ -232,18 +240,68 @@ function Mutate(string MutateString, PlayerPawn Sender)
 		case "checkpoint":
 			if( Sender.IsA('BTSpectator') && !Sender.IsInState('GameEnded') )
 				BTSpectator(Sender).Suicide();
-			break;
+		break;
 
 		case "lagmover":
 			if(Sender.bAdmin)
 				SwitchLagMover(Sender);
-			break;
+		break;
 
 		case "nsmap":
 			if(Sender.bAdmin)
 				AddMapToExceptions(Sender);
+		break;
+
+		case "resetview":
+			Sender.ViewTarget = None;
+			Sender.bBehindview = false;
+		break;
+
+		case "rskin":
+			if( Sender.IsA('TournamentPlayer') )
+				foreach AllActors(class'BTEPRI', BPRI)
+					if(PlayerPawn(BPRI.Owner) == Sender)
+						Sender.static.SetMultiSkin(Sender, BPRI.DefaultSkin, BPRI.DefaultFace, 0);
+		break;
+
+		case "bskin":
+			if( Sender.IsA('TournamentPlayer') )
+				foreach AllActors(class'BTEPRI', BPRI)
+					if(PlayerPawn(BPRI.Owner) == Sender)
+						Sender.static.SetMultiSkin(Sender, BPRI.DefaultSkin, BPRI.DefaultFace, 1);
+		break;
+
+		case "gskin":
+			if( Sender.IsA('TournamentPlayer') )
+				foreach AllActors(class'BTEPRI', BPRI)
+					if(PlayerPawn(BPRI.Owner) == Sender)
+						Sender.static.SetMultiSkin(Sender, BPRI.DefaultSkin, BPRI.DefaultFace, 2);
+		break;
+
+		case "yskin":
+			if( Sender.IsA('TournamentPlayer') )
+				foreach AllActors(class'BTEPRI', BPRI)
+					if(PlayerPawn(BPRI.Owner) == Sender)
+						Sender.static.SetMultiSkin(Sender, BPRI.DefaultSkin, BPRI.DefaultFace, 3);
+		break;
+
+		case "grayskin":
+		case "greyskin":
+		case "blackskin":
+			if( Sender.IsA('TournamentPlayer') )
+				foreach AllActors(class'BTEPRI', BPRI)
+					if(PlayerPawn(BPRI.Owner) == Sender)
+						Sender.static.SetMultiSkin(Sender, BPRI.DefaultSkin, BPRI.DefaultFace, 4);
+		break;
+
+		case "noskin":
+			if( Sender.IsA('TournamentPlayer') )
+				foreach AllActors(class'BTEPRI', BPRI)
+					if(PlayerPawn(BPRI.Owner) == Sender)
+						Sender.static.SetMultiSkin(Sender, BPRI.DefaultSkin, BPRI.DefaultFace, Sender.PlayerReplicationInfo.Team);
 	}
 }
+
 function AddMapToExceptions(PlayerPawn Sender)
 {
 	local BTEPRI EPRI;
@@ -417,10 +475,11 @@ function string GetLevelName()
 defaultproperties
 {
 	NetSpeedLimiter=True
-	KickPlayer=True
+	KickPlayer=False
 	Broadcast=True
-	ResetNetSpeed=20000
-	MinimumNetSpeed=8000
+	AutoCorrectNetSpeed=True
+	CorrectNetSpeed=20000
+	MinimumNetSpeed=10000
 	MaximumNetSpeed=20000
 	MapExceptions="CTF-BT-BasicGayMap-v2"
 	FixLagMovers=True

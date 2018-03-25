@@ -5,29 +5,67 @@ class BTEPRI expands ReplicationInfo;
 
 var PlayerPawn PP;
 var int PlayerID;
+var string DefaultSkin, DefaultFace;
+var byte SkinColor, TeamColor;
+var BTEClientData BTEC;
 
 var int	ArmorAmount, ChestAmount, ThighAmount, BootCharges;
 var bool bShieldbelt, bChestArmor, bThighArmor, bJumpBoots;
 
-var bool NetSpeedLimiter, KickPlayer, Broadcast;
-var int ResetNetSpeed, MinimumNetSpeed, MaximumNetSpeed;
+var bool NetSpeedLimiter, KickPlayer, Broadcast, AutoCorrectNetspeed;
+var int CorrectNetspeed, MinimumNetSpeed, MaximumNetSpeed;
 
 //=============================================================================
 // replicating armor + boots from server to clients
 //=============================================================================
 replication
 {
+	reliable if (Role < ROLE_Authority)
+		ServerSkinStuff;
+
 	reliable if (Role == ROLE_Authority)
-		PP, PlayerID, ArmorAmount, ChestAmount, ThighAmount, bShieldbelt, bChestArmor, bThighArmor, bJumpBoots, BootCharges, ClientStuff;
+		PP, PlayerID, ArmorAmount, ChestAmount, ThighAmount, bShieldbelt, bChestArmor, bThighArmor, bJumpBoots, BootCharges, ClientStuff, ClientSkinStuff, DefaultSkin, DefaultFace, SkinColor;
 }
-//=============================================================================
-// Tick - checks armor and boots in player's inventory + netspeed check
-//=============================================================================
 event Spawned()
 {
 	if(Role == ROLE_Authority)
 		Enable('Tick');
+
+	ClientSkinStuff();
 }
+simulated function ClientSkinStuff()
+{
+	local string Skin;
+	local string Face;
+
+	Skin = PlayerPawn(Owner).GetDefaultURL("Skin");
+	Face = PlayerPawn(Owner).GetDefaultURL("Face");
+
+	ServerSkinStuff(Face, Skin);
+}
+function ServerSkinStuff(string gotFace, string gotSkin)
+{
+	local BTEClientData BTEC;
+
+	DefaultSkin = gotSkin;
+	DefaultFace = gotFace;
+
+	GetSkinColor();
+	SetSkinColor();
+}
+function SetSkinColor()
+{
+	if(SkinColor >= 0 && SkinColor < 5)
+		PlayerPawn(Owner).static.SetMultiSkin(PlayerPawn(Owner), DefaultSkin, DefaultFace, SkinColor);
+}
+function GetSkinColor()
+{
+	if(BTEC != None)
+		SkinColor = BTEC.ServerSkinColor;
+}
+//=============================================================================
+// Tick - checks armor and boots in player's inventory + netspeed check
+//=============================================================================
 function Tick(float d)
 {
 	Local inventory Inv;
@@ -76,6 +114,20 @@ function Tick(float d)
 					break; // can occasionally get temporary loops in netplay
 			}
 		}
+
+		if(BTEC != None)
+		{
+			if(BTEC.ServerSkinColor != SkinColor)
+				SkinColor = BTEC.ServerSkinColor;
+		}
+
+		if(PlayerPawn(Owner).PlayerReplicationInfo.Team != TeamColor)
+		{
+			TeamColor = PlayerPawn(Owner).PlayerReplicationInfo.Team;
+			GetSkinColor();
+			SetSkinColor();
+		}
+
 		if(NetSpeedLimiter)
 		{
 			NetSpeed = PlayerPawn(Owner).Player.CurrentNetSpeed;
@@ -89,31 +141,39 @@ function Tick(float d)
 //=============================================================================
 function TakeAction(int NetSpeed)
 {
-	ClientStuff(ResetNetSpeed, KickPlayer);
+	ClientStuff(CorrectNetspeed, AutoCorrectNetSpeed, KickPlayer);
 	PlayerPawn(Owner).Suicide();
-	PlayerPawn(Owner).ClientMessage("Netspeed values should be between " $ MinimumNetSpeed $ " and " $ MaximumNetSpeed);
-	PlayerPawn(Owner).ClientMessage("Your netspeed was " $ NetSpeed $ " and has been reset to " $ ResetNetSpeed);
-
-	Disable('Tick');
-	SetTimer(0.3, false);
 
 	if(Broadcast)
 	{
 		if(KickPlayer)
 			BroadcastMessage(PlayerPawn(Owner).PlayerReplicationInfo.PlayerName $ " tried to use " $ NetSpeed $ " netspeed and got kicked from the server", true, 'CriticalEvent');
-		else
+		else if(AutoCorrectNetSpeed)
 			BroadcastMessage(PlayerPawn(Owner).PlayerReplicationInfo.PlayerName $ " tried to use " $ NetSpeed $ " netspeed", true, 'CriticalEvent');
 	}
+
+	PlayerPawn(Owner).ClientMessage("Netspeed values should be between " $ MinimumNetSpeed $ " and " $ MaximumNetSpeed);
+	if(AutoCorrectNetSpeed)
+	{
+		PlayerPawn(Owner).ConsoleCommand("NETSPEED " $ CorrectNetspeed);
+		PlayerPawn(Owner).ClientMessage("Your netspeed was " $ NetSpeed $ " and has been reset to " $ CorrectNetspeed);
+	}
+	else
+		PlayerPawn(Owner).ClientMessage("Your netspeed is " $ NetSpeed);
+
+	Disable('Tick');
+	SetTimer(0.3, false);
 }
 function Timer()
 {
 	Enable('Tick');
 }
-simulated function ClientStuff(int NetSpeed, bool bKick)
+simulated function ClientStuff(int NetSpeed, bool Correct, bool bKick)
 {
 	if(Level.NetMode != NM_DedicatedServer)
 	{
-		PlayerPawn(Owner).ConsoleCommand("NETSPEED " $ NetSpeed);
+		if(Correct)
+			PlayerPawn(Owner).ConsoleCommand("NETSPEED " $ NetSpeed);
 		if(bKick)
 			PlayerPawn(Owner).ConsoleCommand("DISCONNECT");
 	}

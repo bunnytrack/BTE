@@ -32,17 +32,11 @@ var string	cmdBuffer;
 
 var int		Index;
 var int		LastTime;
+var int		oldUpdate;
 var bool	lastUpdate;
 var float	cStamp;
-var int		oldUpdate;
 
 var() color TeamColor[4];
-var() color AltTeamColor[4];
-
-var() name OrderNames[16];
-var() int NumOrders;
-
-var CTFFlag MyFlag;
 
 function Timer()
 {
@@ -73,16 +67,32 @@ function HelpMSG()
 	Pawn(Owner).ClientMessage(" - !SpeedMeter or !Speed");
 	Pawn(Owner).ClientMessage("Disable all of the above features");
 	Pawn(Owner).ClientMessage(" - !Disable");
+	Pawn(Owner).ClientMessage("***********************************************");
+	Pawn(Owner).ClientMessage("Personal SkinColors");
+	Pawn(Owner).ClientMessage(" - !rskin or !RedSkin");
+	Pawn(Owner).ClientMessage(" - !bskin or !BlueSkin");
+	Pawn(Owner).ClientMessage(" - !gskin or !GreenSkin");
+	Pawn(Owner).ClientMessage(" - !yskin or !YellowSkin");
+	Pawn(Owner).ClientMessage(" - !BlackSkin or !GraySkin");
+	Pawn(Owner).ClientMessage(" - !NoSkin to use your TeamColor");
+	Pawn(Owner).ClientMessage("***********************************************");
 	Pawn(Owner).ClientMessage("Enable/Disable Custom Timer");
 	Pawn(Owner).ClientMessage(" - !Timer");
+	Pawn(Owner).ClientMessage("Timer Location");
+	Pawn(Owner).ClientMessage(" - !tx -200 or !TimerX 500");
+	Pawn(Owner).ClientMessage(" - !ty 150 or !TimerY -300");
+	Pawn(Owner).ClientMessage("* Default location: X=0 Y=0");
 	Pawn(Owner).ClientMessage("Timer scaling");
 	Pawn(Owner).ClientMessage(" - !TimerScale 1 or !tscale 2");
 	Pawn(Owner).ClientMessage("Timer Red/Green/Blue colors");
-	Pawn(Owner).ClientMessage(" - !TRed 255 or !tr <number>");
-	Pawn(Owner).ClientMessage(" - !TGreen 0 or !tg <number>");
-	Pawn(Owner).ClientMessage(" - !TBlue 90 or !tb <number>");
-	Pawn(Owner).ClientMessage("***********************************************");
-	Pawn(Owner).ClientMessage("* Original timer color: R=127 G=127 B=0");
+	Pawn(Owner).ClientMessage(" - !tc 255 0 255");
+	Pawn(Owner).ClientMessage(" - !tcolor 1 33 7");
+	Pawn(Owner).ClientMessage(" - !tcolour <red> <green> <blue>");
+	Pawn(Owner).ClientMessage("Individual colors");
+	Pawn(Owner).ClientMessage(" - !TRed 255");
+	Pawn(Owner).ClientMessage(" - !TGreen 0");
+	Pawn(Owner).ClientMessage(" - !TBlue <number between 0 and 255>");
+	Pawn(Owner).ClientMessage("* Original yellow color: R=127 G=127 B=0");
 	Pawn(Owner).ClientMessage("***********************************************");
 }
 
@@ -107,10 +117,10 @@ simulated function BindReplications()
 	}
 }
 
-simulated function PostRender( canvas Canvas )
+simulated function PostRender(canvas Canvas)
 {
 	local float XL, YL, XPos, YPos, FadeValue, XX, YY;
-	local string Message, SS;
+	local string Message, S, SS, SSS, SSSS;
 	local int M, i, j, k, XOverflow, X, Y, z;
 	local float OldOriginX;
 	local CTFFlag Flag;
@@ -119,15 +129,17 @@ simulated function PostRender( canvas Canvas )
 
 	local Pawn				PAWNS;
 	local Trigger			TRIG;
+	local BTEPRI			BPRI;
 	local TournamentPlayer	TP;
+	local Info				CP;
 
 	HUDSetup(canvas);
-	if ( (PawnOwner == None) || (PlayerOwner.PlayerReplicationInfo == None) )
+	if (PawnOwner == None || PlayerOwner.PlayerReplicationInfo == None)
 		return;
 
 	if(bShowInfo)
 	{
-		ServerInfo.RenderInfo( Canvas );
+		ServerInfo.RenderInfo(Canvas);
 		return;
 	}
 /*
@@ -183,7 +195,7 @@ simulated function PostRender( canvas Canvas )
 							{
 								if(TP == TournamentPlayer(Owner) && BTEC.Ghost)
 									continue;
-	
+
 								TP.Style = STY_Normal;
 								if (TP.Weapon != None)
 									TP.Weapon.Style = STY_Normal;
@@ -193,7 +205,7 @@ simulated function PostRender( canvas Canvas )
 						else
 							Pawn(Owner).ClientMessage("Players are now see-through");
 					break;
-	
+
 					case "say !showtrig":
 						BTEC.SwitchBool("ShowTrig");
 						if (!BTEC.ShowTrig)
@@ -205,13 +217,38 @@ simulated function PostRender( canvas Canvas )
 						else
 							Pawn(Owner).ClientMessage("Triggers are now visible");
 					break;
-				
+
 					case "say !teamskin":
 						BTEC.SwitchBool("TeamSkin");
 						if(BTEC.TeamSkin)
 							Pawn(Owner).ClientMessage("TeamSkin Enabled");
 						else
-							Pawn(Owner).ClientMessage("TeamSkin Disabled - Reconnect to let it take effect");
+						{
+							foreach AllActors(class'TournamentPlayer', TP)
+							{
+								foreach AllActors(class'BTEPRI', BPRI)
+								{
+									if(TP == BPRI.Owner)
+									{
+										TP.bUnlit = false;
+										if(BPRI.SkinColor >= 0 && BPRI.SkinColor < 5)
+											TP.static.SetMultiSkin(TP, BPRI.DefaultSkin, BPRI.DefaultFace, BPRI.SkinColor);
+										else
+											TP.static.SetMultiSkin(TP, BPRI.DefaultSkin, BPRI.DefaultFace, TP.PlayerReplicationInfo.Team);
+
+										if(TP.Weapon != None)
+										{
+											TP.Weapon.bUnlit = false;
+											TP.Weapon.MultiSkins[0] = None;
+											TP.Weapon.MultiSkins[1] = None;
+											TP.Weapon.MultiSkins[2] = None;
+											TP.Weapon.MultiSkins[3] = None;
+										}
+									}
+								}
+							}
+							Pawn(Owner).ClientMessage("TeamSkin Disabled");
+						}
 					break;
 
 					case "say !wallhack":
@@ -227,8 +264,8 @@ simulated function PostRender( canvas Canvas )
 							Pawn(Owner).ClientMessage("Wallhack is for Spectators only");
 					break;
 
-					case "say !speedmeter":
 					case "say !speed":
+					case "say !speedmeter":
 						BTEC.SwitchBool("SpeedMeter");
 						if(BTEC.SpeedMeter)
 							Pawn(Owner).ClientMessage("Speed meter Enabled");
@@ -244,39 +281,117 @@ simulated function PostRender( canvas Canvas )
 							Pawn(Owner).ClientMessage("Custom timer Disabled");
 					break;
 
-					default:
-					if (ParseDelimited(cmdBuffer, " ", 2) ~= "!timerscale" || ParseDelimited(cmdBuffer, " ", 2) ~= "!tscale")
-					{
-						SS = ParseDelimited(cmdBuffer, " ", 3);
-						BTEC.TimerSetting("Scale", float(SS));
-						Pawn(Owner).ClientMessage("Timer scale set to " $ float(SS));
-					}
-					else if (ParseDelimited(cmdBuffer, " ", 2) ~= "!tred" || ParseDelimited(cmdBuffer, " ", 2) ~= "!tr")
-					{
-						SS = ParseDelimited(cmdBuffer, " ", 3);
-						BTEC.TimerSetting("Red", byte(SS));
-						Pawn(Owner).ClientMessage("Timer Red color set to " $ byte(SS));
-					}
-					else if (ParseDelimited(cmdBuffer, " ", 2) ~= "!tgreen" || ParseDelimited(cmdBuffer, " ", 2) ~= "!tg")
-					{
-						SS = ParseDelimited(cmdBuffer, " ", 3);
-						BTEC.TimerSetting("Green", byte(SS));
-						Pawn(Owner).ClientMessage("Timer Green color set to " $ byte(SS));
-					}
-					else if (ParseDelimited(cmdBuffer, " ", 2) ~= "!tblue" || ParseDelimited(cmdBuffer, " ", 2) ~= "!tb")
-					{
-						SS = ParseDelimited(cmdBuffer, " ", 3);
-						BTEC.TimerSetting("Blue", byte(SS));
-						Pawn(Owner).ClientMessage("Timer Blue color set to " $ byte(SS));
-					}
-					else if (cmdBuffer ~= "say !disable")
-					{
-						Pawn(Owner).ClientMessage("BT Enhancements Disabled - Reconnecting");
+					case "say !disable":
+						Pawn(Owner).ClientMessage("BT Enhancements Disabled");
 						BTEC.SwitchBool("Disable");
-						ConsoleCommand("Reconnect");
-					}
-					else if (cmdBuffer ~= "say !help" || cmdBuffer ~= "say !BTE")
+					break;
+
+					case "say !help":
+					case "say !BTE":
 						HelpMsg();
+					break;
+
+					case "say !rskin":
+					case "say !redskin":
+						Pawn(Owner).ClientMessage("Your skincolor has changed to Red");
+						Pawn(Owner).ConsoleCommand("mutate rskin");
+						BTEC.SetSkinColor("Red");
+					break;
+
+					case "say !bskin":
+					case "say !blueskin":
+						Pawn(Owner).ClientMessage("Your skincolor has changed to Blue");
+						Pawn(Owner).ConsoleCommand("mutate bskin");
+						BTEC.SetSkinColor("Blue");
+					break;
+
+					case "say !gskin":
+					case "say !greenskin":
+						Pawn(Owner).ClientMessage("Your skincolor has changed to Green");
+						Pawn(Owner).ConsoleCommand("mutate gskin");
+						BTEC.SetSkinColor("Green");
+					break;
+
+					case "say !yskin":
+					case "say !goldskin":
+					case "say !yellowskin":
+						Pawn(Owner).ClientMessage("Your skincolor has changed to Yellow");
+						Pawn(Owner).ConsoleCommand("mutate yskin");
+						BTEC.SetSkinColor("Yellow");
+					break;
+
+					case "say !greyskin":
+					case "say !grayskin":
+					case "say !blackskin":
+						Pawn(Owner).ClientMessage("Your skincolor has changed to Black");
+						Pawn(Owner).ConsoleCommand("mutate blackskin");
+						BTEC.SetSkinColor("Black");
+					break;
+
+					case "say !noskin":
+						Pawn(Owner).ClientMessage("Your skincolor is now your teamcolor");
+						Pawn(Owner).ConsoleCommand("mutate noskin");
+						BTEC.SetSkinColor("Team");
+					break;
+
+					default:
+					S = ParseDelimited(cmdBuffer, " ", 2);
+					switch(S)
+					{
+						case "!tx":
+						case "!timerx":
+							SS = ParseDelimited(cmdBuffer, " ", 3);
+							BTEC.TimerSetting("X", float(SS));
+							Pawn(Owner).ClientMessage("Timer location X set to " $ trimZeros(float(SS)));
+						break;
+
+						case "!ty":
+						case "!timery":
+							SS = ParseDelimited(cmdBuffer, " ", 3);
+							BTEC.TimerSetting("Y", float(SS));
+							Pawn(Owner).ClientMessage("Timer location Y set to " $ trimZeros(float(SS)));
+						break;
+
+						case "!tscale":
+						case "!timerscale":
+							SS = ParseDelimited(cmdBuffer, " ", 3);
+							BTEC.TimerSetting("Scale", float(SS));
+							Pawn(Owner).ClientMessage("Timer scale set to " $ trimZeros(float(SS)));
+						break;
+
+						case "!tred":
+							SS = ParseDelimited(cmdBuffer, " ", 3);
+							BTEC.TimerSetting("Red", byte(SS));
+							Pawn(Owner).ClientMessage("Timer Red color set to " $ byte(SS));
+						break;
+
+						case "!tgreen":
+							SS = ParseDelimited(cmdBuffer, " ", 3);
+							BTEC.TimerSetting("Green", byte(SS));
+							Pawn(Owner).ClientMessage("Timer Green color set to " $ byte(SS));
+						break;
+
+						case "!tblue":
+							SS = ParseDelimited(cmdBuffer, " ", 3);
+							BTEC.TimerSetting("Blue", byte(SS));
+							Pawn(Owner).ClientMessage("Timer Blue color set to " $ byte(SS));
+						break;
+
+						case "!tc":
+						case "!tcolor":
+						case "!tcolour":
+							SS = ParseDelimited(cmdBuffer, " ", 3);
+							BTEC.TimerSetting("Red", byte(SS));
+
+							SSS = ParseDelimited(cmdBuffer, " ", 4);
+							BTEC.TimerSetting("Green", byte(SSS));
+
+							SSSS = ParseDelimited(cmdBuffer, " ", 5);
+							BTEC.TimerSetting("Blue", byte(SSSS));
+
+							Pawn(Owner).ClientMessage("Timer colors set to Red: " $ byte(SS) $ ", Green: " $ byte(SSS) $ ", Blue: " $ byte(SSSS));
+						break;
+					}
 				}
 				cmdBuffer = "";
 			}
@@ -286,38 +401,46 @@ simulated function PostRender( canvas Canvas )
 		{
 			if(BTEC.TeamSkin || BTEC.Ghosts)
 			{
-				foreach AllActors(class'TournamentPlayer', TP)
+				foreach AllActors(class'BTEPRI', BPRI)
 				{
 					if(BTEC.TeamSkin)
 					{
-						TStexP = Texture(DynamicLoadObject("BTEUser.TS_"$TP.PlayerReplicationInfo.Team, class'Texture'));
-						if(TP.MultiSkins[0] != TStexP)
+						if(BPRI.SkinColor >= 0 && BPRI.SkinColor < 5)
+							TStexP = Texture(DynamicLoadObject("BTEUser1.TS_"$BPRI.SkinColor, class'Texture'));
+						else
+							TStexP = Texture(DynamicLoadObject("BTEUser1.TS_"$PlayerPawn(BPRI.Owner).PlayerReplicationInfo.Team, class'Texture'));
+
+						if(BPRI.Owner.MultiSkins[0] != TStexP)
 						{
-							TP.bUnlit = true;
-							TP.MultiSkins[0] = TStexP;
-							TP.MultiSkins[1] = TStexP;
-							TP.MultiSkins[2] = TStexP;
-							TP.MultiSkins[3] = TStexP;
+							BPRI.Owner.bUnlit = true;
+							BPRI.Owner.MultiSkins[0] = TStexP;
+							BPRI.Owner.MultiSkins[1] = TStexP;
+							BPRI.Owner.MultiSkins[2] = TStexP;
+							BPRI.Owner.MultiSkins[3] = TStexP;
 						}
-						if(TP.Weapon != None)
+						if(PlayerPawn(BPRI.Owner).Weapon != None)
 						{
-							TStexW = Texture(DynamicLoadObject("BTEUser.TS_"$TP.PlayerReplicationInfo.Team, class'Texture'));
-							if(TP.Weapon.MultiSkins[0] != TStexW)
+							if(BPRI.SkinColor >= 0 && BPRI.SkinColor < 5)
+								TStexW = Texture(DynamicLoadObject("BTEUser1.TS_"$BPRI.SkinColor, class'Texture'));
+							else
+								TStexW = Texture(DynamicLoadObject("BTEUser1.TS_"$PlayerPawn(BPRI.Owner).PlayerReplicationInfo.Team, class'Texture'));
+
+							if(PlayerPawn(BPRI.Owner).Weapon.MultiSkins[0] != TStexW)
 							{
-								TP.Weapon.bUnlit = true;
-								TP.Weapon.MultiSkins[0] = TStexW;
-								TP.Weapon.MultiSkins[1] = TStexW;
-								TP.Weapon.MultiSkins[2] = TStexW;
-								TP.Weapon.MultiSkins[3] = TStexW;
+								PlayerPawn(BPRI.Owner).Weapon.bUnlit = true;
+								PlayerPawn(BPRI.Owner).Weapon.MultiSkins[0] = TStexW;
+								PlayerPawn(BPRI.Owner).Weapon.MultiSkins[1] = TStexW;
+								PlayerPawn(BPRI.Owner).Weapon.MultiSkins[2] = TStexW;
+								PlayerPawn(BPRI.Owner).Weapon.MultiSkins[3] = TStexW;
 							}
 						}
 					}
 					if(BTEC.Ghosts)
 					{
-						if(TP.Style != STY_Translucent)
-							TP.Style = STY_Translucent;
-						if(TP.Weapon != None && TP.Weapon.Style != STY_Translucent)
-							TP.Weapon.Style = STY_Translucent;
+						if(BPRI.Owner.Style != STY_Translucent)
+							BPRI.Owner.Style = STY_Translucent;
+						if(PlayerPawn(BPRI.Owner).Weapon != None && PlayerPawn(BPRI.Owner).Weapon.Style != STY_Translucent)
+							PlayerPawn(BPRI.Owner).Weapon.Style = STY_Translucent;
 					}
 				}
 			}
@@ -333,14 +456,15 @@ simulated function PostRender( canvas Canvas )
 
 			if(Pawn(Owner).PlayerReplicationInfo.bIsSpectator && !Pawn(Owner).PlayerReplicationInfo.bWaitingPlayer)
 			{
-				foreach AllActors(class'Pawn', PAWNS)
+				if(BTEC.WallHack)
 				{
-					if( PAWNS.Health > 0 && PAWNS != PawnOwner || (PAWNS == PawnOwner && Pawn(Owner).bBehindView) )
+					foreach AllActors(class'Pawn', PAWNS)
 					{
-						if(BTEC.WallHack)
+						if(PAWNS != PawnOwner || (PAWNS == PawnOwner && Pawn(Owner).bBehindView))
+						{
 							Canvas.DrawActor(PAWNS, false, true);
-						else
-							Canvas.DrawActor(PAWNS, false, false);
+							PAWNS.bHidden = false;
+						}
 					}
 				}
 			}
@@ -367,25 +491,24 @@ simulated function PostRender( canvas Canvas )
 		}
 	}
 
-	for (i=0; i<4; i++)
+	for (i = 0; i < 4; i++)
 	{
-		if ( ShortMessageQueue[i].Message != None )
+		if (ShortMessageQueue[i].Message != None)
 		{
 			j++;
 
-			if ( bResChanged || (ShortMessageQueue[i].XL == 0) )
+			if (bResChanged || ShortMessageQueue[i].XL == 0)
 			{
-				if ( ShortMessageQueue[i].Message.Default.bComplexString )
-				Canvas.StrLen(ShortMessageQueue[i].Message.Static.AssembleString(self,ShortMessageQueue[i].Switch,
-					ShortMessageQueue[i].RelatedPRI,ShortMessageQueue[i].StringMessage),ShortMessageQueue[i].XL, ShortMessageQueue[i].YL);
+				if (ShortMessageQueue[i].Message.Default.bComplexString)
+					Canvas.StrLen(ShortMessageQueue[i].Message.Static.AssembleString(self,ShortMessageQueue[i].Switch,ShortMessageQueue[i].RelatedPRI,ShortMessageQueue[i].StringMessage),ShortMessageQueue[i].XL, ShortMessageQueue[i].YL);
 				else
-				Canvas.StrLen(ShortMessageQueue[i].StringMessage, ShortMessageQueue[i].XL, ShortMessageQueue[i].YL);
+					Canvas.StrLen(ShortMessageQueue[i].StringMessage, ShortMessageQueue[i].XL, ShortMessageQueue[i].YL);
 				Canvas.StrLen("TEST", XL, YL);
 				ShortMessageQueue[i].numLines = 1;
-				if ( ShortMessageQueue[i].YL > YL )
+				if (ShortMessageQueue[i].YL > YL)
 				{
 					ShortMessageQueue[i].numLines++;
-					for (k=2; k<4-i; k++)
+					for (k = 2; k < 4-i; k++)
 					{
 						if (ShortMessageQueue[i].YL > YL*k)
 							ShortMessageQueue[i].numLines++;
@@ -396,10 +519,10 @@ simulated function PostRender( canvas Canvas )
 			// Keep track of the amount of lines a message overflows, to offset the next message with.
 			Canvas.SetPos(6, 2 + YL * YPos);
 			YPos += ShortMessageQueue[i].numLines;
-			if ( YPos > 4 )
+			if (YPos > 4)
 				break;
 
-			if ( ShortMessageQueue[i].Message.Default.bComplexString )
+			if (ShortMessageQueue[i].Message.Default.bComplexString)
 			{
 				// Use this for string messages with multiple colors.
 				ShortMessageQueue[i].Message.Static.RenderComplexMessage(Canvas,ShortMessageQueue[i].XL,  YL,
@@ -418,24 +541,23 @@ simulated function PostRender( canvas Canvas )
 	Canvas.SetClip(OldClipX, Canvas.ClipY);
 	Canvas.SetOrigin(OldOriginX, Canvas.OrgY);
 
-	if ( PlayerOwner.bShowScores || bForceScores )
+	if (PlayerOwner.bShowScores || bForceScores)
 	{
-		if ( (PlayerOwner.Scoring == None) && (PlayerOwner.ScoringType != None) )
+		if (PlayerOwner.Scoring == None && PlayerOwner.ScoringType != None)
 			PlayerOwner.Scoring = Spawn(PlayerOwner.ScoringType, PlayerOwner);
-		if ( PlayerOwner.Scoring != None )
+		if (PlayerOwner.Scoring != None)
 		{
 			PlayerOwner.Scoring.OwnerHUD = self;
 			PlayerOwner.Scoring.ShowScores(Canvas);
-			if ( PlayerOwner.Player.Console.bTyping )
+			if (PlayerOwner.Player.Console.bTyping)
 				DrawTypingPrompt(Canvas, PlayerOwner.Player.Console);
 			return;
 		}
 	}
 
-	YPos = FMax(YL*4 + 8, 70*Scale);
-	if ( bDrawFaceArea )
-		DrawTalkFace( Canvas,0, YPos );	// DrawTalkFace( Canvas, YPos ); WAS ERROR CODE?
-		//DrawTalkFace( Canvas, YPos ); // DrawTalkFace( Canvas,0, YPos ); WAS ERROR CODE?
+	YPos = FMax(YL * 4 + 8, 70 * Scale);
+	if (bDrawFaceArea)
+		DrawTalkFace( Canvas,0, YPos );
 	if (j > 0)
 	{
 		bDrawMessageArea = True;
@@ -447,7 +569,7 @@ simulated function PostRender( canvas Canvas )
 	if (!bHideCenterMessages)
 	{
 		// Master localized message control loop.
-		for (i=0; i<10; i++)
+		for (i = 0; i < 10; i++)
 		{
 			if (LocalMessages[i].Message != None)
 			{
@@ -457,7 +579,7 @@ simulated function PostRender( canvas Canvas )
 					FadeValue = (LocalMessages[i].EndOfLife - Level.TimeSeconds);
 					if (FadeValue > 0.0)
 					{
-						if ( bResChanged || (LocalMessages[i].XL == 0) )
+						if (bResChanged || LocalMessages[i].XL == 0)
 						{
 							if ( LocalMessages[i].Message.Static.GetFontSize(LocalMessages[i].Switch) == 1 )
 								LocalMessages[i].StringFont = MyFonts.GetBigFont( Canvas.ClipX );
@@ -475,7 +597,7 @@ simulated function PostRender( canvas Canvas )
 				}
 				else
 				{
-					if ( bResChanged || (LocalMessages[i].XL == 0) )
+					if (bResChanged || LocalMessages[i].XL == 0)
 					{
 						if ( LocalMessages[i].Message.Static.GetFontSize(LocalMessages[i].Switch) == 1 )
 							LocalMessages[i].StringFont = MyFonts.GetBigFont( Canvas.ClipX );
@@ -496,11 +618,11 @@ simulated function PostRender( canvas Canvas )
 	}
 	Canvas.Style = ERenderStyle.STY_Normal;
 
-	if ( !PlayerOwner.bBehindView && (PawnOwner.Weapon != None) && (Level.LevelAction == LEVACT_None) )
+	if (!PlayerOwner.bBehindView && PawnOwner.Weapon != None && Level.LevelAction == LEVACT_None)
 	{
 		Canvas.DrawColor = WhiteColor;
 		PawnOwner.Weapon.PostRender(Canvas);
-		if ( !PawnOwner.Weapon.bOwnsCrossHair )
+		if (!PawnOwner.Weapon.bOwnsCrossHair)
 			DrawCrossHair(Canvas, 0,0 );
 	}
 
@@ -525,7 +647,7 @@ simulated function PostRender( canvas Canvas )
 				Canvas.bCenter = false;
 				Canvas.DrawColor = WhiteColor;
 				Canvas.Style = Style;
-				Canvas.Font = MyFonts.GetSmallFont( Canvas.ClipX );
+				Canvas.Font = MyFonts.GetSmallFont(Canvas.ClipX);
 			}
 			//	DRAW INFO FOR PLAYERS
 			if(!Pawn(Owner).PlayerReplicationInfo.bIsSpectator)
@@ -538,7 +660,7 @@ simulated function PostRender( canvas Canvas )
 				}
 			}
 			//	DRAW SPEC TIMER
-			if(RI != None && !PawnOwner.IsInState('GameEnded') && !PawnOwner.PlayerReplicationInfo.bWaitingPlayer && !PawnOwner.PlayerReplicationInfo.bIsSpectator)
+			if(RI != None && !PawnOwner.PlayerReplicationInfo.bWaitingPlayer && !PawnOwner.PlayerReplicationInfo.bIsSpectator)
 			{
 				//see if server sent a new runtime
 				if(oldUpdate != RI.runTime)
@@ -567,17 +689,17 @@ simulated function PostRender( canvas Canvas )
 					}
 					Time = LastTime;
 				}
-				DrawHUDTimes(Canvas, Time/600, Time % 600);
+				DrawHUDTimes(Canvas, Time / 600, Time % 600);
 			}
 		}
 	}
 
-	if ( bStartUpMessage && (Level.TimeSeconds < 5) )
+	if (bStartUpMessage && Level.TimeSeconds < 5)
 	{
 		bStartUpMessage = false;
 		PlayerOwner.SetProgressTime(7);
 	}
-	if ( (PlayerOwner.ProgressTimeOut > Level.TimeSeconds) && !bHideCenterMessages )
+	if (PlayerOwner.ProgressTimeOut > Level.TimeSeconds && !bHideCenterMessages)
 		DisplayProgressMessage(Canvas);
 
 	// Display MOTD
@@ -591,7 +713,7 @@ simulated function PostRender( canvas Canvas )
 			Canvas.Style = Style;
 
 			// Draw Ammo
-			if ( !bHideAmmo )
+			if (!bHideAmmo)
 				DrawAmmo(Canvas);
 
 			// Draw Health/Armor status + Boots
@@ -604,12 +726,12 @@ simulated function PostRender( canvas Canvas )
 				DrawSpeed(Canvas, PawnOwner);
 
 			// Display Weapons
-			if ( !bHideAllWeapons )
+			if (!bHideAllWeapons)
 				DrawWeapons(Canvas);
-			else if ( Level.bHighDetailMode && (PawnOwner == PlayerOwner) && (PlayerOwner.Handedness == 2) )
+			else if (Level.bHighDetailMode && PawnOwner == PlayerOwner && PlayerOwner.Handedness == 2)
 			{
 				// if weapon bar hidden and weapon hidden, draw weapon name when it changes
-				if ( PawnOwner.PendingWeapon != None )
+				if (PawnOwner.PendingWeapon != None)
 				{
 					WeaponNameFade = 1.0;
 					Canvas.Font = MyFonts.GetBigFont( Canvas.ClipX );
@@ -625,48 +747,48 @@ simulated function PostRender( canvas Canvas )
 					Canvas.SetPos(Canvas.ClipX - 360 * Scale, Canvas.ClipY - 64 * Scale);
 					Canvas.DrawText(TournamentPlayer(PawnOwner).ClientPending.ItemName, False);
 				}
-				else if ( (WeaponNameFade > 0) && (PawnOwner.Weapon != None) )
+				else if (WeaponNameFade > 0 && PawnOwner.Weapon != None)
 				{
 					Canvas.Font = MyFonts.GetBigFont( Canvas.ClipX );
 					Canvas.DrawColor = PawnOwner.Weapon.NameColor;
-					if ( WeaponNameFade < 1 )
+					if (WeaponNameFade < 1)
 						Canvas.DrawColor = Canvas.DrawColor * WeaponNameFade;
 					Canvas.SetPos(Canvas.ClipX - 360 * Scale, Canvas.ClipY - 64 * Scale);
 					Canvas.DrawText(PawnOwner.Weapon.ItemName, False);
 				}
 			}
 			// Display Frag count
-			if ( !bAlwaysHideFrags && !bHideFrags )
+			if (!bAlwaysHideFrags && !bHideFrags)
 				DrawFragCount(Canvas);
 		}
 		// Team Game Synopsis
-		if ( !bHideTeamInfo )
+		if (!bHideTeamInfo)
 			DrawGameSynopsis(Canvas);
 
 		// Display Identification Info
-		if ( PawnOwner == PlayerOwner )
-			DrawIdentifyInfo(Canvas);
+		if (PawnOwner == PlayerOwner)
+			DrawIdentifyInfoz(Canvas);
 
-		if ( HUDMutator != None )
+		if (HUDMutator != None)
 			HUDMutator.PostRender(Canvas);
 
-		if ( (PlayerOwner.GameReplicationInfo != None) && (PlayerPawn(Owner).GameReplicationInfo.RemainingTime > 0) )
+		if (PlayerOwner.GameReplicationInfo != None && PlayerPawn(Owner).GameReplicationInfo.RemainingTime > 0)
 		{
-			if ( TimeMessageClass == None )
+			if (TimeMessageClass == None)
 				TimeMessageClass = class<CriticalEventPlus>(DynamicLoadObject("Botpack.TimeMessage", class'Class'));
 
-			if ( (PlayerOwner.GameReplicationInfo.RemainingTime <= 300) && (PlayerOwner.GameReplicationInfo.RemainingTime != LastReportedTime) )
+			if (PlayerOwner.GameReplicationInfo.RemainingTime <= 300 && PlayerOwner.GameReplicationInfo.RemainingTime != LastReportedTime)
 			{
 				LastReportedTime = PlayerOwner.GameReplicationInfo.RemainingTime;
-				if ( PlayerOwner.GameReplicationInfo.RemainingTime <= 30 )
+				if (PlayerOwner.GameReplicationInfo.RemainingTime <= 30)
 				{
-					bTimeValid = ( bTimeValid || (PlayerOwner.GameReplicationInfo.RemainingTime > 0) );
-					if ( PlayerOwner.GameReplicationInfo.RemainingTime == 30 )
+					bTimeValid = (bTimeValid || PlayerOwner.GameReplicationInfo.RemainingTime > 0);
+					if (PlayerOwner.GameReplicationInfo.RemainingTime == 30)
 						TellTime(5);
-					else if ( bTimeValid && PlayerOwner.GameReplicationInfo.RemainingTime <= 10 )
+					else if (bTimeValid && PlayerOwner.GameReplicationInfo.RemainingTime <= 10)
 						TellTime(16 - PlayerOwner.GameReplicationInfo.RemainingTime);
 				}
-				else if ( PlayerOwner.GameReplicationInfo.RemainingTime % 60 == 0 )
+				else if (PlayerOwner.GameReplicationInfo.RemainingTime % 60 == 0)
 				{
 					M = PlayerOwner.GameReplicationInfo.RemainingTime/60;
 					TellTime(5 - M);
@@ -674,26 +796,21 @@ simulated function PostRender( canvas Canvas )
 			}
 		}
 	}
-	if ( PlayerOwner.Player.Console.bTyping )
+	if (PlayerOwner.Player.Console.bTyping)
 		DrawTypingPrompt(Canvas, PlayerOwner.Player.Console);
 
-	if ( PlayerOwner.bBadConnectionAlert && (PlayerOwner.Level.TimeSeconds > 5) )
+	if (PlayerOwner.bBadConnectionAlert && PlayerOwner.Level.TimeSeconds > 5)
 	{
 		Canvas.Style = ERenderStyle.STY_Normal;
 		Canvas.DrawColor = WhiteColor;
-		Canvas.SetPos(Canvas.ClipX - (64*Scale), Canvas.ClipY / 2);
+		Canvas.SetPos(Canvas.ClipX - (64 * Scale), Canvas.ClipY / 2);
 		Canvas.DrawIcon(texture'DisconnectWarn', Scale);
 	}
 
-   	//Super.PostRender( Canvas );
-
-	if ( (PlayerOwner == None) || (PawnOwner == None) || (PlayerOwner.GameReplicationInfo == None)
-		|| (PawnOwner.PlayerReplicationInfo == None)
-		|| ((PlayerOwner.bShowMenu || PlayerOwner.bShowScores) && (Canvas.ClipX < 640)) )
+	if ( (PlayerOwner == None) || (PawnOwner == None) || (PlayerOwner.GameReplicationInfo == None) || (PawnOwner.PlayerReplicationInfo == None) || ((PlayerOwner.bShowMenu || PlayerOwner.bShowScores) && (Canvas.ClipX < 640)) )
 		return;
 
-	//Canvas.Style = Style;
-	if( !bHideHUD && !bHideTeamInfo )
+	if(!bHideHUD && !bHideTeamInfo)
 	{
 		X = Canvas.ClipX - 70 * Scale;
 		Y = Canvas.ClipY - 350 * Scale;
@@ -711,6 +828,72 @@ simulated function PostRender( canvas Canvas )
 	}
 }
 
+function SetInfo(PlayerReplicationInfo PRI)
+{
+	local int i;
+	local bool bInit, bFoundRI, bFoundEPRI;
+	local ReplicationInfo Rinfo;
+
+	// See if it's already initialized
+	for(i = 0; i < Index; i++)
+	{
+		if(PI[i].PRI == PRI)
+		{
+			EPRI	= PI[i].EPRI;
+			RI		= PI[i].RI;
+			bInit = true;
+			break;
+		}
+	}
+	if(!bInit)	// Not initialized, find the RI + EPRI
+	{
+		foreach Level.AllActors(class'ReplicationInfo', Rinfo)
+		{
+			if( Rinfo.IsA('BTPPReplicationInfo') )
+			{
+				if(BTPPReplicationInfo(Rinfo).PlayerID == PRI.PlayerID)
+				{
+					RI = BTPPReplicationInfo(Rinfo);
+					bFoundRI = true;
+				}
+			}
+			else if( Rinfo.IsA('BTEPRI') )
+			{
+				if(BTEPRI(Rinfo).PlayerID == PRI.PlayerID)
+				{
+					EPRI = BTEPRI(Rinfo);
+					bFoundEPRI = true;
+				}
+			}
+		}
+		if(bFoundRI && bFoundEPRI)	// Init the slot - on newly found EPRI-RI
+		{
+			if(Index < 32)	// use empty elements in array
+			{
+				PI[Index].PRI = PRI;
+				PI[Index].RI = RI;
+				PI[Index].EPRI = EPRI;
+				Index++;
+			}
+			else	// not enough empty elements, use an old element
+			{
+				for(i = 0; i < 32; i++)
+				{
+					if (PI[i].EPRI == None)
+						break;	// assign here
+				}
+				PI[i].PRI = PRI;
+				PI[i].RI = RI;
+				PI[i].EPRI = EPRI;
+			}
+		}
+	}
+}
+/*##################################################################################################
+##
+## Draw Functions
+##
+##################################################################################################*/
 simulated function DrawStatuz(Canvas Canvas)
 {
 	local float StatScale, H1, H2, X, Y, DamageTime;
@@ -751,7 +934,7 @@ simulated function DrawStatuz(Canvas Canvas)
 				Canvas.DrawColor = PurpleColor;
 			else
 				Canvas.DrawColor = HUDColor;
-			Canvas.DrawTile(Doll, 128*StatScale, 256*StatScale, 0, 0, 128.0, 256.0);
+			Canvas.DrawTile(Doll, 128 * StatScale, 256 * StatScale, 0, 0, 128.0, 256.0);
 			Canvas.DrawColor = HUDColor;
 			if(EPRI.bShieldBelt)
 			{
@@ -818,7 +1001,7 @@ simulated function DrawStatuz(Canvas Canvas)
 	}
 	else
 		Canvas.DrawColor = HUDColor;
-	Canvas.DrawTile(Texture'BotPack.HudElements1', 128*Scale, 64*Scale, 128, 128, 128.0, 64.0);
+	Canvas.DrawTile(Texture'BotPack.HudElements1', 128 * Scale, 64 * Scale, 128, 128, 128.0, 64.0);
 
 	if(PawnOwner.Health < 50)
 	{
@@ -842,7 +1025,7 @@ simulated function DrawStatuz(Canvas Canvas)
 		Y = 0;
 	}
 	Canvas.SetPos(X, Y);
-	Canvas.DrawTile(Texture'BotPack.HudElements1', 128*Scale, 64*Scale, 0, 192, 128.0, 64.0);
+	Canvas.DrawTile(Texture'BotPack.HudElements1', 128 * Scale, 64 * Scale, 0, 192, 128.0, 64.0);
 
 	if(EPRI.bShieldBelt)
 		Canvas.DrawColor = GoldColor;
@@ -878,76 +1061,31 @@ simulated function DrawStatuz(Canvas Canvas)
 	}
 }
 
-simulated function DrawTeam(Canvas Canvas, TeamInfo TI){}
-
-function SetInfo(PlayerReplicationInfo PRI)
+simulated function bool DrawIdentifyInfoz(canvas Canvas)
 {
-	local int i;
-	local bool bInit, bFoundRI, bFoundEPRI;
-	local ReplicationInfo Rinfo;
+	local float XL, YL;
+	local Pawn P;
 
-	// See if it's already initialized
-	for(i = 0; i < Index; i++)
+	if (!TraceIdentify(Canvas))
+		return false;
+
+	if(IdentifyTarget.PlayerName != "")
 	{
-		if(PI[i].PRI == PRI)
+		Canvas.Font = MyFonts.GetBigFont(Canvas.ClipX);
+		DrawTwoColorID(Canvas,IdentifyName, IdentifyTarget.PlayerName, Canvas.ClipY - 256 * Scale);
+
+		Canvas.StrLen("TEST", XL, YL);
+		if(PawnOwner.PlayerReplicationInfo.Team == IdentifyTarget.Team || PawnOwner.PlayerReplicationInfo.bIsSpectator)
 		{
-			EPRI	= PI[i].EPRI;
-			RI		= PI[i].RI;
-			bInit = true;
-			break;
+			P = Pawn(IdentifyTarget.Owner);
+			Canvas.Font = MyFonts.GetSmallFont(Canvas.ClipX);
+			if (P != None)
+				DrawTwoColorID(Canvas,IdentifyHealth,string(P.Health), (Canvas.ClipY - 256 * Scale) + 1.5 * YL);
 		}
 	}
-	if(!bInit)	// Not initialized, find the RI + EPRI
-	{
-		foreach Level.AllActors(class'ReplicationInfo', Rinfo)
-		{
-			if( Rinfo.IsA('BTPPReplicationInfo') )
-			{
-				if(BTPPReplicationInfo(Rinfo).PlayerID == PRI.PlayerID)
-				{
-					RI = BTPPReplicationInfo(Rinfo);
-					bFoundRI = true;
-				}
-			}
-			else if( Rinfo.IsA('BTEPRI') )
-			{
-				if(BTEPRI(Rinfo).PlayerID == PRI.PlayerID)
-				{
-					EPRI = BTEPRI(Rinfo);
-					bFoundEPRI = true;
-				}
-			}
-		}
-
-		if(bFoundRI && bFoundEPRI)	// Init the slot - on newly found EPRI-RI
-		{
-			if(Index < 32)	// use empty elements in array
-			{
-				PI[Index].PRI = PRI;
-				PI[Index].RI = RI;
-				PI[Index].EPRI = EPRI;
-				Index++;
-			}
-			else	// not enough empty elements, use an old element
-			{
-				for(i = 0; i < 32; i++)
-				{
-					if (PI[i].EPRI == None)
-						break;	// assign here
-				}
-				PI[i].PRI = PRI;
-				PI[i].RI = RI;
-				PI[i].EPRI = EPRI;
-			}
-		}
-	}
+	return true;
 }
 
-/*##################################################################################################
-##
-## Draw Functions
-##
-##################################################################################################*/
 simulated function DrawSpeed(Canvas Canvas, Pawn P)
 {
 	local Vector HorizontalVelocity;
@@ -967,6 +1105,7 @@ simulated function DrawSpeed(Canvas Canvas, Pawn P)
 	TextV = string(VertSpeed);
 
 	Canvas.bCenter = true;
+
 	Canvas.Style = ERenderStyle.STY_Normal;
 	Canvas.DrawColor = OrangeColor;
 	Canvas.Font = MyFonts.GetHugeFont(Canvas.ClipX);
@@ -986,18 +1125,28 @@ simulated function DrawHUDTimes(Canvas Canvas, int Minutes, int Seconds)
 	local int d;
 	local float TimerScale, W, H, SW;
 
-	Canvas.CurY = 4;
 	Canvas.Style = ERenderStyle.STY_Normal;
 
 	if(BTEC != None && BTEC.CustomTimer)
+	{
 		TimerScale = Scale * BTEC.TimerScale;
+		Canvas.CurX = (Canvas.ClipX / 2 - 86 * TimerScale) + BTEC.LocationX;
+		Canvas.CurY = 4 + BTEC.LocationY;
+	}
 	else
+	{
 		TimerScale = Scale;
+		Canvas.CurY = 4;
+		Canvas.CurX = Canvas.ClipX / 2 - 86 * TimerScale;
+	}
 
 	if(Minutes > 99)//too long run time: show -:-- in red
 	{
 		Canvas.DrawColor = RedColor;
-		Canvas.CurX = Canvas.ClipX / 2 - 57 * TimerScale;
+		if(BTEC != None && BTEC.CustomTimer)
+			Canvas.CurX = (Canvas.ClipX / 2 - 57 * TimerScale) + BTEC.LocationX;
+		else
+			Canvas.CurX = Canvas.ClipX / 2 - 57 * TimerScale;
 
 		//	-:
 		DrawShadowTile(Canvas, Texture'BTTimer', TimerScale*50, 35*TimerScale, 0, 64, 50.0, 35.0);
@@ -1012,12 +1161,9 @@ simulated function DrawHUDTimes(Canvas Canvas, int Minutes, int Seconds)
 	}
 	else //	show actual timer
 	{
-		//a bit to the left
-		Canvas.CurX = Canvas.ClipX / 2 - 86 * TimerScale;
-
 		if(RI != None && RI.bNeedsRespawn)	//Captime/reset on death in grey
 			Canvas.DrawColor = GreyColor;
-		else if(Minutes < 100)	//yellow for default timer
+		else if(Minutes < 100)
 		{
 			if(BTEC != None && BTEC.CustomTimer)
 			{
@@ -1072,7 +1218,6 @@ simulated function DrawHUDTimes(Canvas Canvas, int Minutes, int Seconds)
 	}
 	Canvas.DrawColor = ChallengeHUD(PlayerOwner.myHUD).GoldColor;
 	Canvas.Style = ERenderStyle.STY_Normal;
-//	Canvas.CurX += 7*TimerScale;
 	Canvas.Font = Canvas.SmallFont;
 
 	if(RI.bBoosted)
@@ -1203,6 +1348,24 @@ function DrawShadowText (Canvas Canvas, coerce string Text, optional bool Param)
 	Canvas.DrawText(Text, Param);
 }
 
+simulated function string trimZeros(float number)
+{
+	local string tmp;
+
+	tmp = number $ "";
+	while (tmp != "0" && (Right(tmp, 1) == "0" || Right(tmp, 1) == "."))
+	{
+		if (Right(tmp, 1) == ".")
+		{
+			tmp = Left(tmp, Len(tmp)-1);
+			break;
+		}
+		else if (Right(tmp, 1) == "0")
+			tmp = Left(tmp, Len(tmp)-1);
+	}
+	return tmp;
+}
+
 function string ParseDelimited(string Text, string Delimiter, int Count, optional bool bToEndOfLine)
 {
 	local string Result, S;
@@ -1233,6 +1396,7 @@ function string ParseDelimited(string Text, string Delimiter, int Count, optiona
 	}
 	return Result;
 }
+simulated function DrawTeam(Canvas Canvas, TeamInfo TI){}
 //=============================================================================
 // Default Properties
 //=============================================================================

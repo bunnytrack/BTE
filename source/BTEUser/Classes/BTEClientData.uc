@@ -7,15 +7,35 @@ class BTEClientData expands Info config(BT_Enhancements);
 #exec texture IMPORT NAME=TS_1	FILE=TEXTURES\TS_1.PCX	MIPS=OFF
 #exec texture IMPORT NAME=TS_2	FILE=TEXTURES\TS_2.PCX	MIPS=OFF
 #exec texture IMPORT NAME=TS_3	FILE=TEXTURES\TS_3.PCX	MIPS=OFF
+#exec texture IMPORT NAME=TS_4	FILE=TEXTURES\TS_4.PCX	MIPS=OFF
 
 var config bool Enabled, Ghost, Ghosts, TeamSkin, ShowTrig, WallHack, SpeedMeter, CustomTimer;
-var config float TimerScale;
-var config byte Red, Green, Blue;
+var config float LocationX, LocationY, TimerScale;
+var config byte Red, Green, Blue, SkinColor;
+var byte ServerSkinColor;
 
 replication
 {
+	reliable if (Role < ROLE_Authority)
+		SSS;
+
 	reliable if(Role == ROLE_Authority)
-		SwitchBool, TimerSetting;
+		SS;
+}
+
+event Spawned()
+{
+	SS();
+}
+
+simulated function SS()
+{
+	SSS(SkinColor);
+}
+
+function SSS(byte C)
+{
+	ServerSkinColor = C;
 }
 
 function Tick(float DeltaTime)
@@ -28,7 +48,7 @@ simulated function SwitchBool(string BoolName)
 {
     switch(BoolName)
     {
-        case ("Disable"): Enabled = false; break;
+        case "Disable": Enabled = false; break;
         default:
         Enabled = true;
         switch(BoolName)
@@ -52,13 +72,31 @@ simulated function TimerSetting(string Setting, float Number)
 		case "Scale": TimerScale = Number; break;
 		case "Red": Red = Number; break;
 		case "Green": Green = Number; break;
-		case "Blue": Blue = Number;
+		case "Blue": Blue = Number; break;
+		case "X": LocationX = Number; break;
+		case "Y": LocationY = Number;
 	}
 	if(!CustomTimer)
 		CustomTimer = true;
 
 	SaveConfig();
 }
+
+simulated function SetSkinColor(string Color)
+{
+	switch(Color)
+	{
+		case "Red": SkinColor = 0; break;
+		case "Blue": SkinColor = 1; break;
+		case "Green": SkinColor = 2; break;
+		case "Yellow": SkinColor = 3; break;
+		case "Black": SkinColor = 4; break;
+		case "Team": SkinColor = 99;
+	}
+	SSS(SkinColor);
+	SaveConfig();
+}
+
 //=============================================================================
 // Default Properties
 //=============================================================================
@@ -71,7 +109,11 @@ defaultproperties
 	ShowTrig=False
 	WallHack=False
 	SpeedMeter=False
+	SkinColor=99
+	ServerSkinColor=99
 	CustomTimer=False
+	LocationX=0
+	LocationY=0
 	TimerScale=1
 	Red=255
 	Green=88
