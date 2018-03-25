@@ -67,6 +67,11 @@ Enable/Disable custom Timer
 
 - !Timer
 
+Timer location
+
+- !TimerX 400 or !tx -200
+- !TimerY -50 or !ty 250
+
 Timer scaling
 
 - !TimerScale 1 or !tscale 1.5
