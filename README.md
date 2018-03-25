@@ -80,7 +80,7 @@ Timer Red/Green/Blue colors
 ### Netspeed limiter
 The Netspeed limiter prevents players from using unallowed netspeed values.    
 Players that attempt to change their netspeed to an unallowed value will automatically suicide and are unable to play.       
-On top of this, there are options to automatically kick the player, correct the player's netspeed or/and to broadcast a message to all players.
+Extra options are to automatically kick the player, correct the player's netspeed or/and to broadcast a message to all players.
 
 Inside `BTE.ini` you can add maps as an exceptions to where the netspeed limiter should be disabled.    
 As an admin you can use the command `mutate nsmap` to add the current map to the exceptions list.
