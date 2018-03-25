@@ -104,7 +104,7 @@ Inside `BTE.ini` you can add maps as an exceptions to where the netspeed limiter
 As an admin you can use the command `mutate nsmap` to add the current map to the exceptions list.
 
 ```
-[BTE_BTNet.BTE]
+[BTE_BTNet1.BTE]
 NetSpeedLimiter=True
 KickPlayer=False
 Broadcast=True
@@ -130,9 +130,9 @@ LagMovers[1]=ExampleMover1,AssertMover3,furymover4_3,leetmover7:CTF-BT-epicmap
 1. Copy the file(s) inside the `compiled` folder to your server's `UT/System/` directory
 2. Open your server's `UnrealTournament.ini`
 3. Under `[Engine.GameEngine]` add:  
-`ServerPackages=BTEUser`  
-`ServerPackages=BTE_BTNet`  
-`ServerActors=BTE_BTNet.BTE`
+`ServerPackages=BTEUser1`  
+`ServerPackages=BTE_BTNet1`  
+`ServerActors=BTE_BTNet1.BTE`
 4. Configure `BTE.ini` to your needs
 5. Restart your server
 
