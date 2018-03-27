@@ -24,7 +24,7 @@ replication
 		ServerSkinStuff;
 
 	reliable if (Role == ROLE_Authority)
-		PP, PlayerID, ArmorAmount, ChestAmount, ThighAmount, bShieldbelt, bChestArmor, bThighArmor, bJumpBoots, BootCharges, ClientStuff, ClientSkinStuff, DefaultSkin, DefaultFace, SkinColor;
+		PP, PlayerID, ArmorAmount, ChestAmount, ThighAmount, bShieldbelt, bChestArmor, bThighArmor, bJumpBoots, BootCharges, ClientSkinStuff, DefaultSkin, DefaultFace, SkinColor;
 }
 event Spawned()
 {
@@ -135,17 +135,6 @@ function Tick(float d)
 //=============================================================================
 function TakeAction(int NetSpeed)
 {
-	ClientStuff(CorrectNetspeed, AutoCorrectNetSpeed, KickPlayer);
-	PlayerPawn(Owner).Suicide();
-
-	if(Broadcast)
-	{
-		if(KickPlayer)
-			BroadcastMessage(PlayerPawn(Owner).PlayerReplicationInfo.PlayerName $ " tried to use " $ NetSpeed $ " netspeed and got kicked from the server", true, 'CriticalEvent');
-		else if(AutoCorrectNetSpeed)
-			BroadcastMessage(PlayerPawn(Owner).PlayerReplicationInfo.PlayerName $ " tried to use " $ NetSpeed $ " netspeed", true, 'CriticalEvent');
-	}
-
 	PlayerPawn(Owner).ClientMessage("Netspeed values should be between " $ MinimumNetSpeed $ " and " $ MaximumNetSpeed);
 	if(AutoCorrectNetSpeed)
 	{
@@ -155,22 +144,25 @@ function TakeAction(int NetSpeed)
 	else
 		PlayerPawn(Owner).ClientMessage("Your netspeed is " $ NetSpeed);
 
+	if(KickPlayer)
+		PlayerPawn(Owner).Destroy();
+	else
+		PlayerPawn(Owner).Suicide();
+
+	if(Broadcast)
+	{
+		if(KickPlayer)
+			BroadcastMessage(PlayerPawn(Owner).PlayerReplicationInfo.PlayerName $ " tried to use " $ NetSpeed $ " netspeed and got kicked from the server", true, 'CriticalEvent');
+		else if(AutoCorrectNetSpeed)
+			BroadcastMessage(PlayerPawn(Owner).PlayerReplicationInfo.PlayerName $ " tried to use " $ NetSpeed $ " netspeed", true, 'CriticalEvent');
+	}
+
 	Disable('Tick');
 	SetTimer(0.3, false);
 }
 function Timer()
 {
 	Enable('Tick');
-}
-simulated function ClientStuff(int NetSpeed, bool Correct, bool bKick)
-{
-	if(Level.NetMode != NM_DedicatedServer)
-	{
-		if(Correct)
-			PlayerPawn(Owner).ConsoleCommand("NETSPEED " $ NetSpeed);
-		if(bKick)
-			PlayerPawn(Owner).ConsoleCommand("DISCONNECT");
-	}
 }
 //=============================================================================
 // Default Properties
