@@ -111,13 +111,13 @@ Stop F5'ing
 - Mutate ResetView
 
 Spectator move through walls
-- SpecGhost
+- Mutate SpecGhost
 
 Spectator fly speed
-- SpecSpeed <number>
+`- Mutate SpecSpeed <number>`
   
 Spectator behindview
-- SpecView <number>
+`- Mutate SpecView <number>`
 
 ### Netspeed limiter
 The Netspeed limiter prevents players from using unallowed netspeed values.    
