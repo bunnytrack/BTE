@@ -3,12 +3,14 @@
 //=============================================================================
 class BTSpectator expands CHSpectator;
 
-var bool bTouchingTele;
+var bool bTouchingTele, SpecGhost;
+var int SpecSpeed, SpecView;
+var BTEClientData BTEC;
 
 replication
 {
 	reliable if(Role == ROLE_Authority)
-		GetVoice;
+		GetVoice, SpecGhost, SpecSpeed, SpecView;
 	reliable if(Role < ROLE_Authority)
 		Chase, JumpFrom, TeleSpec, SetVoice;
 }
@@ -20,6 +22,133 @@ simulated event PostBeginPlay()
 
 	GetVoice();
 	Super.PostBeginPlay();
+}
+//=============================================================================
+// STATE CHEATFLYING
+//=============================================================================
+state CheatFlying
+{
+ignores SeePlayer, HearNoise, Bump, TakeDamage;
+
+	function AnimEnd()
+	{
+		PlaySwimming();
+	}
+
+	function ProcessMove(float DeltaTime, vector NewAccel, eDodgeDir DodgeMove, rotator DeltaRot)
+	{
+		Acceleration = Normal(NewAccel);
+		Velocity = Normal(NewAccel) * SpecSpeed;
+		AutonomousPhysics(DeltaTime);
+	}
+
+	event PlayerTick( float DeltaTime )
+	{
+		if ( bUpdatePosition )
+			ClientUpdatePosition();
+
+		PlayerMove(DeltaTime);
+	}
+
+	function PlayerMove(float DeltaTime)
+	{
+		local rotator newRotation;
+		local vector X,Y,Z;
+
+		GetAxes(ViewRotation,X,Y,Z);
+
+		aForward *= 0.1;
+		aStrafe  *= 0.1;
+		aLookup  *= 0.24;
+		aTurn    *= 0.24;
+		aUp		 *= 0.1;
+
+		Acceleration = aForward*X + aStrafe*Y + aUp*vect(0,0,1);  
+
+		UpdateRotation(DeltaTime, 1);
+
+		if ( Role < ROLE_Authority ) // then save this move and replicate it
+			ReplicateMove(DeltaTime, Acceleration, DODGE_None, rot(0,0,0));
+		else
+			ProcessMove(DeltaTime, Acceleration, DODGE_None, rot(0,0,0));
+	}
+
+	function BeginState()
+	{
+		EyeHeight = BaseEyeHeight;
+		SetPhysics(PHYS_Flying);
+		if  ( !IsAnimating() ) PlaySwimming();
+		// log("cheat flying");
+	}
+}
+//=============================================================================
+// 3RD PERSON VIEW STUFF
+//=============================================================================
+// Player view.
+// Compute the rendering viewpoint for the player.
+function CalcBehindView(out vector CameraLocation, out rotator CameraRotation, float Dist)
+{
+	local vector View,HitLocation,HitNormal;
+	local float ViewDist;
+
+	CameraRotation = ViewRotation;
+	View = vect(1,0,0) >> CameraRotation;
+	if( Trace( HitLocation, HitNormal, CameraLocation - (Dist + 30) * vector(CameraRotation), CameraLocation ) != None )
+		ViewDist = FMin( (CameraLocation - HitLocation) Dot View, Dist );
+	else
+		ViewDist = Dist;
+	CameraLocation -= (ViewDist - 30) * View; 
+}
+function GhostCalcBehindView(out vector CameraLocation, out rotator CameraRotation, float Dist)
+{
+	local vector View;
+
+	CameraRotation = ViewRotation;
+	View = vect(1,0,0) >> CameraRotation;
+	CameraLocation -= (Dist - 30) * View;
+}
+event PlayerCalcView(out actor ViewActor, out vector CameraLocation, out rotator CameraRotation)
+{
+	local Pawn PTarget;
+
+	if(ViewTarget != None)
+	{
+		ViewActor = ViewTarget;
+		CameraLocation = ViewTarget.Location;
+		CameraRotation = ViewTarget.Rotation;
+		PTarget = Pawn(ViewTarget);
+		if(PTarget != None)
+		{
+			if(Level.NetMode == NM_Client)
+			{
+				if(PTarget.bIsPlayer)
+					PTarget.ViewRotation = TargetViewRotation;
+				PTarget.EyeHeight = TargetEyeHeight;
+				if(PTarget.Weapon != None)
+					PTarget.Weapon.PlayerViewOffset = TargetWeaponViewOffset;
+			}
+			if(PTarget.bIsPlayer)
+				CameraRotation = PTarget.ViewRotation;
+			if(!bBehindView)
+				CameraLocation.Z += PTarget.EyeHeight;
+		}
+		if(bBehindView)
+		{
+			if(SpecGhost)
+				GhostCalcBehindView(CameraLocation, CameraRotation, SpecView);
+			else
+				CalcBehindView(CameraLocation, CameraRotation, SpecView);
+		}
+		return;
+	}
+
+	ViewActor = Self;
+	CameraLocation = Location;
+
+	// First-person view.
+	CameraRotation = ViewRotation;
+	CameraLocation.Z += EyeHeight;
+	CameraLocation += WalkBob;
 }
 //=============================================================================
 // TELEPORTER STUFF
@@ -224,16 +353,30 @@ exec function Chase(string aPlayer)
 }
 // ThrowWeapon/Suicide function taken from Higor's XC_Spec_r10 and modified
 //=============================================================================
-exec function ThrowWeapon(){Suicide();}
-exec function Suicide()
+exec function ThrowWeapon()
 {
 	local vector HitLocation, HitNormal;
 
 	if(Level.NetMode != NM_Client) //Server sets this one, prevents ACE kick
 	{
-		Trace(HitLocation, HitNormal, Location + vector(ViewRotation) * 15000);
-		if( HitLocation != vect(0,0,0) )
-			SetLocation(HitLocation + HitNormal * 5);
+		if(Pawn(ViewTarget) == None)
+		{
+			Trace(HitLocation, HitNormal, Location + vector(ViewRotation) * 15000);
+			if( HitLocation != vect(0,0,0) )
+				SetLocation(HitLocation + HitNormal * 5);
+		}
+	}
+}
+// Suicide - Teleport 1500 units forward
+//=============================================================================
+exec function Suicide()
+{
+	if(Level.NetMode != NM_Client) //Server sets this one, prevents ACE kick
+	{
+		if(Pawn(ViewTarget) == None)
+		{
+			SetLocation(Location + vector(ViewRotation) * 1500);
+		}
 	}
 }
 // Fly function taken from Spectator.uc and modified
@@ -256,6 +399,25 @@ function Possess()
 	Inventory = None;
 	Fly();
 	GetVoice();
+}
+// Grab - Initialize function
+//=============================================================================
+exec function Grab()
+{
+	if(BTEC.ServerSpecGhost)
+	{
+		SpecGhost = true;
+		bCollideWorld = false;
+	}
+	if(BTEC.ServerSpecSpeed < 0)
+		SpecSpeed = 0;
+	else
+		SpecSpeed = BTEC.ServerSpecSpeed;
+
+	if(BTEC.ServerSpecView < 0)
+		SpecView = 0;
+	else
+		SpecView = BTEC.ServerSpecView;
 }
 //=============================================================================
 // REMOVE SPAMMY CLIENTMESSAGES
@@ -381,8 +543,12 @@ defaultproperties
 {
 	Texture=None
 	bCollideActors=False
-	bCollideWorld=False
+	bCollideWorld=True
 	bBlockActors=False
 	bBlockPlayers=False
 	bProjTarget=False
+	AirSpeed=12000
+	SpecGhost=False
+	SpecSpeed=300
+	SpecView=180
 }

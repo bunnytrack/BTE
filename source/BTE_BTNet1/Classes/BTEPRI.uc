@@ -45,8 +45,6 @@ simulated function ClientSkinStuff()
 }
 function ServerSkinStuff(string gotFace, string gotSkin)
 {
-	local BTEClientData BTEC;
-
 	DefaultSkin = gotSkin;
 	DefaultFace = gotFace;
 

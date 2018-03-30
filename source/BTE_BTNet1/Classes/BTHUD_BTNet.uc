@@ -15,13 +15,16 @@ struct PlayerInfo
 };
 var PlayerInfo PI[32];
 
+var color					AltTeamColor[5];
+var color					TeamColor[5];
 var color					OrangeColor;
 var color					YellowColor;
 var color					BlackColor;
 var color					GreyColor;
 var ClientData				Config;
-var BTEClientData			BTEC;
+var BTEPRI					TEPRI;
 var BTEPRI					EPRI;
+var BTEClientData			BTEC;
 var BTPPGameReplicationInfo	GRI;
 var BTPPReplicationInfo		RI;
 
@@ -35,8 +38,6 @@ var int		LastTime;
 var int		oldUpdate;
 var bool	lastUpdate;
 var float	cStamp;
-
-var() color TeamColor[4];
 
 function Timer()
 {
@@ -61,26 +62,40 @@ function HelpMSG()
 	Pawn(Owner).ClientMessage(" - !TeamSkin");
 	Pawn(Owner).ClientMessage("Show all Triggers");
 	Pawn(Owner).ClientMessage(" - !ShowTrig");
-	Pawn(Owner).ClientMessage("WallHack only for Spectators");
-	Pawn(Owner).ClientMessage(" - !Wallhack");
 	Pawn(Owner).ClientMessage("Speed Meter");
 	Pawn(Owner).ClientMessage(" - !SpeedMeter or !Speed");
 	Pawn(Owner).ClientMessage("Disable all of the above features");
 	Pawn(Owner).ClientMessage(" - !Disable");
 	Pawn(Owner).ClientMessage("***********************************************");
-	Pawn(Owner).ClientMessage("Personal SkinColors");
-	Pawn(Owner).ClientMessage(" - !rskin or !RedSkin");
-	Pawn(Owner).ClientMessage(" - !bskin or !BlueSkin");
-	Pawn(Owner).ClientMessage(" - !gskin or !GreenSkin");
-	Pawn(Owner).ClientMessage(" - !yskin or !YellowSkin");
-	Pawn(Owner).ClientMessage(" - !BlackSkin or !GraySkin");
-	Pawn(Owner).ClientMessage(" - !NoSkin to use your TeamColor");
+	Pawn(Owner).ClientMessage("* Spectator Commands");
+	Pawn(Owner).ClientMessage("***********************************************");
+	Pawn(Owner).ClientMessage("Enable/Disable SpecGhost");
+	Pawn(Owner).ClientMessage(" - !SpecGhost or !sg");
+	Pawn(Owner).ClientMessage("Fly Speed");
+	Pawn(Owner).ClientMessage(" - !SpecSpeed 1000 or !ss 500");
+	Pawn(Owner).ClientMessage("* Default speed: 300");
+	Pawn(Owner).ClientMessage("Behindview Distance");
+	Pawn(Owner).ClientMessage(" - !SpecView 500 or !sv 200");
+	Pawn(Owner).ClientMessage("* Default distance: 180");
+	Pawn(Owner).ClientMessage("See Players and Monsters through walls");
+	Pawn(Owner).ClientMessage(" - !Wallhack or !wh");
+	Pawn(Owner).ClientMessage("***********************************************");
+	Pawn(Owner).ClientMessage("* Player Commands");
+	Pawn(Owner).ClientMessage("***********************************************");
+	Pawn(Owner).ClientMessage(" - !RedSkin or !rskin");
+	Pawn(Owner).ClientMessage(" - !BlueSkin or !bskin");
+	Pawn(Owner).ClientMessage(" - !GreenSkin or !gskin");
+	Pawn(Owner).ClientMessage(" - !YellowSkin or !yskin");
+	Pawn(Owner).ClientMessage(" - !GraySkin or !grskin");
+	Pawn(Owner).ClientMessage(" - !NoSkin to use your Teamcolor");
+	Pawn(Owner).ClientMessage("***********************************************");
+	Pawn(Owner).ClientMessage("* Timer Commands");
 	Pawn(Owner).ClientMessage("***********************************************");
 	Pawn(Owner).ClientMessage("Enable/Disable Custom Timer");
 	Pawn(Owner).ClientMessage(" - !Timer");
 	Pawn(Owner).ClientMessage("Timer Location");
-	Pawn(Owner).ClientMessage(" - !tx -200 or !TimerX 500");
-	Pawn(Owner).ClientMessage(" - !ty 150 or !TimerY -300");
+	Pawn(Owner).ClientMessage(" - !TimerX 500 or !tx -200");
+	Pawn(Owner).ClientMessage(" - !TimerY -300 or !ty 150");
 	Pawn(Owner).ClientMessage("* Default location: X=0 Y=0");
 	Pawn(Owner).ClientMessage("Timer scaling");
 	Pawn(Owner).ClientMessage(" - !TimerScale 1 or !tscale 2");
@@ -257,6 +272,7 @@ simulated function PostRender(canvas Canvas)
 						}
 					break;
 
+					case "say !wh":
 					case "say !wallhack":
 						if(Pawn(Owner).PlayerReplicationInfo.bIsSpectator)
 						{
@@ -299,63 +315,138 @@ simulated function PostRender(canvas Canvas)
 
 					case "say !rskin":
 					case "say !redskin":
-						Pawn(Owner).ClientMessage("Your skincolor has changed to Red");
-						Pawn(Owner).ConsoleCommand("mutate rskin");
-						BTEC.SetSkinColor("Red");
+						if(!Pawn(Owner).PlayerReplicationInfo.bIsSpectator)
+						{
+							Pawn(Owner).ClientMessage("Your skincolor has changed to Red");
+							Pawn(Owner).ConsoleCommand("mutate rskin");
+							BTEC.SetSkinColor("Red");
+						}
+						else
+							Pawn(Owner).ClientMessage("Skins are for Players only");
 					break;
 
 					case "say !bskin":
 					case "say !blueskin":
-						Pawn(Owner).ClientMessage("Your skincolor has changed to Blue");
-						Pawn(Owner).ConsoleCommand("mutate bskin");
-						BTEC.SetSkinColor("Blue");
+						if(!Pawn(Owner).PlayerReplicationInfo.bIsSpectator)
+						{
+							Pawn(Owner).ClientMessage("Your skincolor has changed to Blue");
+							Pawn(Owner).ConsoleCommand("mutate bskin");
+							BTEC.SetSkinColor("Blue");
+						}
+						else
+							Pawn(Owner).ClientMessage("Skins are for Players only");
 					break;
 
 					case "say !gskin":
 					case "say !greenskin":
-						Pawn(Owner).ClientMessage("Your skincolor has changed to Green");
-						Pawn(Owner).ConsoleCommand("mutate gskin");
-						BTEC.SetSkinColor("Green");
+						if(!Pawn(Owner).PlayerReplicationInfo.bIsSpectator)
+						{
+							Pawn(Owner).ClientMessage("Your skincolor has changed to Green");
+							Pawn(Owner).ConsoleCommand("mutate gskin");
+							BTEC.SetSkinColor("Green");
+						}
+						else
+							Pawn(Owner).ClientMessage("Skins are for Players only");
 					break;
 
 					case "say !yskin":
 					case "say !goldskin":
 					case "say !yellowskin":
-						Pawn(Owner).ClientMessage("Your skincolor has changed to Yellow");
-						Pawn(Owner).ConsoleCommand("mutate yskin");
-						BTEC.SetSkinColor("Yellow");
+						if(!Pawn(Owner).PlayerReplicationInfo.bIsSpectator)
+						{
+							Pawn(Owner).ClientMessage("Your skincolor has changed to Yellow");
+							Pawn(Owner).ConsoleCommand("mutate yskin");
+							BTEC.SetSkinColor("Yellow");
+						}
+						else
+							Pawn(Owner).ClientMessage("Skins are for Players only");
 					break;
 
 					case "say !greyskin":
 					case "say !grayskin":
 					case "say !blackskin":
-						Pawn(Owner).ClientMessage("Your skincolor has changed to Black");
-						Pawn(Owner).ConsoleCommand("mutate blackskin");
-						BTEC.SetSkinColor("Black");
+						if(!Pawn(Owner).PlayerReplicationInfo.bIsSpectator)
+						{
+							Pawn(Owner).ClientMessage("Your skincolor has changed to Black");
+							Pawn(Owner).ConsoleCommand("mutate blackskin");
+							BTEC.SetSkinColor("Black");
+						}
+						else
+							Pawn(Owner).ClientMessage("Skins are for Players only");
 					break;
 
 					case "say !noskin":
-						Pawn(Owner).ClientMessage("Your skincolor is now your teamcolor");
-						Pawn(Owner).ConsoleCommand("mutate noskin");
-						BTEC.SetSkinColor("Team");
+						if(!Pawn(Owner).PlayerReplicationInfo.bIsSpectator)
+						{
+							Pawn(Owner).ClientMessage("Your skincolor is now your teamcolor");
+							Pawn(Owner).ConsoleCommand("mutate noskin");
+							BTEC.SetSkinColor("Team");
+						}
+						else
+							Pawn(Owner).ClientMessage("Skins are for Players only");
+					break;
+
+					case "say !sg":
+					case "say !specghost":
+						if(Pawn(Owner).PlayerReplicationInfo.bIsSpectator)
+						{
+							BTEC.SwitchBool("SpecGhost");
+							Pawn(Owner).ConsoleCommand("mutate specghost");
+							if (BTEC.SpecGhost)
+								Pawn(Owner).ClientMessage("SpecGhost Enabled");
+							else
+								Pawn(Owner).ClientMessage("SpecGhost Disabled");
+						}
+						else
+							Pawn(Owner).ClientMessage("SpecGhost is for Spectators only");
 					break;
 
 					default:
 					S = ParseDelimited(cmdBuffer, " ", 2);
 					switch(S)
 					{
+						case "!ss":
+						case "!specspeed":
+							if(Pawn(Owner).PlayerReplicationInfo.bIsSpectator)
+							{
+								SS = ParseDelimited(cmdBuffer, " ", 3);
+								if(int(SS) < 0)
+									SS = "0";
+								BTEC.SpecSetting("SpecSPeed", int(SS));
+								Pawn(Owner).ConsoleCommand("mutate specspeed " $ int(SS));
+								Pawn(Owner).ClientMessage("Spectator speed set to " $ int(SS));
+							}
+							else
+								Pawn(Owner).ClientMessage("SpecSpeed is for Spectators only");
+						break;
+
+						case "!sv":
+						case "!specview":
+							if(Pawn(Owner).PlayerReplicationInfo.bIsSpectator)
+							{
+								SS = ParseDelimited(cmdBuffer, " ", 3);
+								if(int(SS) < 0)
+									SS = "0";
+								BTEC.SpecSetting("SpecView", int(SS));
+								Pawn(Owner).ConsoleCommand("mutate specview " $ int(SS));
+								Pawn(Owner).ClientMessage("Spectator view set to " $ int(SS));
+							}
+							else
+								Pawn(Owner).ClientMessage("SpecView is for Spectators only");
+						break;
+
 						case "!tx":
 						case "!timerx":
 							SS = ParseDelimited(cmdBuffer, " ", 3);
-							BTEC.TimerSetting("X", float(SS));
-							Pawn(Owner).ClientMessage("Timer location X set to " $ trimZeros(float(SS)));
+							BTEC.TimerSetting("X", int(SS));
+							Pawn(Owner).ClientMessage("Timer location X set to " $ int(SS));
 						break;
 
 						case "!ty":
 						case "!timery":
 							SS = ParseDelimited(cmdBuffer, " ", 3);
-							BTEC.TimerSetting("Y", float(SS));
-							Pawn(Owner).ClientMessage("Timer location Y set to " $ trimZeros(float(SS)));
+							BTEC.TimerSetting("Y", int(SS));
+							Pawn(Owner).ClientMessage("Timer location Y set to " $ int(SS));
 						break;
 
 						case "!tscale":
@@ -459,18 +550,17 @@ simulated function PostRender(canvas Canvas)
 					TRIG.DrawType = DT_Sprite;
 				}
 			}
-
-			if(Pawn(Owner).PlayerReplicationInfo.bIsSpectator && !Pawn(Owner).PlayerReplicationInfo.bWaitingPlayer)
+		}
+		if(Pawn(Owner).PlayerReplicationInfo.bIsSpectator && !Pawn(Owner).PlayerReplicationInfo.bWaitingPlayer)
+		{
+			if(BTEC.WallHack)
 			{
-				if(BTEC.WallHack)
+				foreach AllActors(class'Pawn', PAWNS)
 				{
-					foreach AllActors(class'Pawn', PAWNS)
+					if(PAWNS != PawnOwner || (PAWNS == PawnOwner && Pawn(Owner).bBehindView))
 					{
-						if(PAWNS != PawnOwner || (PAWNS == PawnOwner && Pawn(Owner).bBehindView))
-						{
-							Canvas.DrawActor(PAWNS, false, true);
-							PAWNS.bHidden = false;
-						}
+						Canvas.DrawActor(PAWNS, false, true);
+						PAWNS.bHidden = false;
 					}
 				}
 			}
@@ -646,7 +736,11 @@ simulated function PostRender(canvas Canvas)
 				Canvas.StrLen("test", XX, YY);
 				Canvas.SetPos(0, Canvas.ClipY - YY * 0.666 - 0.0833 * Canvas.ClipY);
 
-				Canvas.DrawColor = ChallengeTeamHUD(PlayerOwner.myHUD).TeamColor[PawnOwner.PlayerReplicationInfo.Team];
+				if(EPRI != None && EPRI.SkinColor >= 0 && EPRI.SkinColor < 5)
+					Canvas.DrawColor = TeamColor[EPRI.SkinColor];
+				else
+					Canvas.DrawColor = TeamColor[PawnOwner.PlayerReplicationInfo.Team];
+
 				DrawShadowText(Canvas, PawnOwner.PlayerReplicationInfo.PlayerName, True);
 
 				//	RESET EVERYTHING
@@ -773,7 +867,7 @@ simulated function PostRender(canvas Canvas)
 
 		// Display Identification Info
 		if (PawnOwner == PlayerOwner)
-			DrawIdentifyInfoz(Canvas);
+			DrawIdentifyInfo(Canvas);
 
 		if (HUDMutator != None)
 			HUDMutator.PostRender(Canvas);
@@ -1066,9 +1160,10 @@ simulated function DrawStatuz(Canvas Canvas)
 		DrawBigNum(Canvas, EPRI.BootCharges, X + 4 * Scale, Y + 16 * Scale, 1);
 	}
 }
-
-simulated function bool DrawIdentifyInfoz(canvas Canvas)
+//=========================================================================
+simulated function bool DrawIdentifyInfo(canvas Canvas)
 {
+	local BTEPRI BTEPRI;
 	local float XL, YL;
 	local Pawn P;
 
@@ -1077,18 +1172,46 @@ simulated function bool DrawIdentifyInfoz(canvas Canvas)
 
 	if(IdentifyTarget.PlayerName != "")
 	{
-		Canvas.Font = MyFonts.GetBigFont(Canvas.ClipX);
-		DrawTwoColorID(Canvas,IdentifyName, IdentifyTarget.PlayerName, Canvas.ClipY - 256 * Scale);
+		if(TEPRI == None || TEPRI.PlayerID != IdentifyTarget.PlayerID)
+		{
+			foreach AllActors(class'BTEPRI', BTEPRI)
+			{
+				if(BTEPRI.PlayerID == IdentifyTarget.PlayerID)
+					TEPRI = BTEPRI;
+			}
+		}
+		if(TEPRI != None)
+		{
+			Canvas.Font = MyFonts.GetBigFont(Canvas.ClipX);
+			DrawTwoColorID(Canvas,IdentifyName, IdentifyTarget.PlayerName, Canvas.ClipY - 256 * Scale);
 
-		Canvas.StrLen("TEST", XL, YL);
-		P = Pawn(IdentifyTarget.Owner);
-		Canvas.Font = MyFonts.GetSmallFont(Canvas.ClipX);
-		if (P != None)
-			DrawTwoColorID(Canvas,IdentifyHealth,string(P.Health), (Canvas.ClipY - 256 * Scale) + 1.5 * YL);
+			Canvas.StrLen("TEST", XL, YL);
+			P = Pawn(IdentifyTarget.Owner);
+			Canvas.Font = MyFonts.GetSmallFont(Canvas.ClipX);
+			if (P != None)
+				DrawTwoColorID(Canvas,IdentifyHealth,string(P.Health), (Canvas.ClipY - 256 * Scale) + 1.5 * YL);
+		}
 	}
 	return true;
 }
-
+simulated function SetIDColor(Canvas Canvas, int Type)
+{
+	if(Type == 0)
+	{
+		if(TEPRI.SkinColor >= 0 && TEPRI.SkinColor < 5)
+			Canvas.DrawColor = AltTeamColor[TEPRI.SkinColor] * 0.333 * IdentifyFadeTime;
+		else
+			Canvas.DrawColor = AltTeamColor[IdentifyTarget.Team] * 0.333 * IdentifyFadeTime;
+	}
+	else
+	{
+		if(TEPRI.SkinColor >= 0 && TEPRI.SkinColor < 5)
+			Canvas.DrawColor = TeamColor[TEPRI.SkinColor] * 0.333 * IdentifyFadeTime;
+		else
+			Canvas.DrawColor = TeamColor[IdentifyTarget.Team] * 0.333 * IdentifyFadeTime;
+	}
+}
+//=========================================================================
 simulated function DrawSpeed(Canvas Canvas, Pawn P)
 {
 	local Vector HorizontalVelocity;
@@ -1410,4 +1533,14 @@ defaultproperties
 	GreyColor=(R=170,G=170,B=170)
 	YellowColor=(R=127,G=127,B=0)
 	OrangeColor=(R=255,G=88)
+	TeamColor(0)=(R=255)
+	TeamColor(1)=(G=128,B=255)
+	TeamColor(2)=(G=255)
+	TeamColor(3)=(R=255,G=255)
+	TeamColor(4)=(R=127,G=127,B=127)
+	AltTeamColor(0)=(R=200)
+	AltTeamColor(1)=(G=94,B=187)
+	AltTeamColor(2)=(G=128)
+	AltTeamColor(3)=(R=255,G=255,B=128)
+	AltTeamColor(4)=(R=96,G=96,B=96)
 }

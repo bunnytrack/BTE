@@ -9,31 +9,62 @@ class BTEClientData expands Info config(BT_Enhancements);
 #exec texture IMPORT NAME=TS_3	FILE=TEXTURES\TS_3.PCX	MIPS=OFF
 #exec texture IMPORT NAME=TS_4	FILE=TEXTURES\TS_4.PCX	MIPS=OFF
 
-var config bool Enabled, Ghost, Ghosts, TeamSkin, ShowTrig, WallHack, SpeedMeter, CustomTimer;
-var config float LocationX, LocationY, TimerScale;
-var config byte Red, Green, Blue, SkinColor;
+var config bool Enabled;
+var config bool Ghost;
+var config bool Ghosts;
+var config bool TeamSkin;
+var config bool ShowTrig;
+var config bool WallHack;
+var config bool SpeedMeter;
+
+var config bool SpecGhost;
+var config int SpecSPeed;
+var config int SpecView;
+
+var config bool CustomTimer;
+var config int LocationX;
+var config int LocationY;
+var config float TimerScale;
+var config byte Red;
+var config byte Green;
+var config byte Blue;
+
+var config byte SkinColor;
+
 var byte ServerSkinColor;
+var bool ServerSpecGhost;
+var int ServerSpecSPeed;
+var int ServerSpecView;
 
 replication
 {
 	reliable if (Role < ROLE_Authority)
-		SSS;
+		SetServerSkinColor, SetServerSpecVars;
 
 	reliable if(Role == ROLE_Authority)
-		SS;
+		GetClientVars;
 }
 
 event Spawned()
 {
-	SS();
+	GetClientVars();
 }
 
-simulated function SS()
+simulated function GetClientVars()
 {
-	SSS(SkinColor);
+	SetServerSpecVars(SpecGhost, SpecSPeed, SpecView);
+	SetServerSkinColor(SkinColor);
 }
 
-function SSS(byte C)
+function SetServerSpecVars(bool SpecGhost, int SpecSPeed, int SpecView)
+{
+	ServerSpecGhost = SpecGhost;
+	ServerSpecSPeed = SpecSPeed;
+	ServerSpecView = SpecView;
+	PlayerPawn(Owner).Grab();
+}
+
+function SetServerSkinColor(byte C)
 {
 	ServerSkinColor = C;
 }
@@ -59,6 +90,7 @@ simulated function SwitchBool(string BoolName)
             case "ShowTrig": ShowTrig = !ShowTrig; break;
             case "WallHack": WallHack = !WallHack; break;
             case "SpeedMeter": SpeedMeter = !SpeedMeter; break;
+            case "SpecGhost": SpecGhost = !SpecGhost; break;
             case "CustomTimer": CustomTimer = !CustomTimer;
         }
     }
@@ -82,6 +114,22 @@ simulated function TimerSetting(string Setting, float Number)
 	SaveConfig();
 }
 
+simulated function SpecSetting(string Setting, int Number)
+{
+	switch(Setting)
+	{
+		case "SpecSPeed": SpecSPeed = Number; break;
+		case "SpecView": SpecView = Number;
+	}
+	if(!SpecGhost)
+	{
+		SpecGhost = true;
+		SetServerSpecVars(SpecGhost, SpecSPeed, SpecView);
+	}
+
+	SaveConfig();
+}
+
 simulated function SetSkinColor(string Color)
 {
 	switch(Color)
@@ -93,7 +141,7 @@ simulated function SetSkinColor(string Color)
 		case "Black": SkinColor = 4; break;
 		case "Team": SkinColor = 99;
 	}
-	SSS(SkinColor);
+	SetServerSkinColor(SkinColor);
 	SaveConfig();
 }
 
@@ -109,6 +157,9 @@ defaultproperties
 	ShowTrig=False
 	WallHack=False
 	SpeedMeter=False
+	SpecGhost=True
+	SpecSpeed=300
+	SpecView=180
 	SkinColor=99
 	ServerSkinColor=99
 	CustomTimer=False

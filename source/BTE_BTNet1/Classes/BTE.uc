@@ -143,12 +143,13 @@ function CheckForNewPlayer()
 //=============================================================================
 function InitNewSpec(PlayerPawn PP)
 {
-	local int i, k;
+	local int i;
 
 	i = FindFreeSISlot();
 
 	SI[i].PP = PP;
 	SI[i].BTEC = Spawn(class'BTEUser1.BTEClientData', PP);
+	BTSpectator(PP).BTEC = SI[i].BTEC;
 }
 function int FindFreeSISlot()
 {
@@ -232,6 +233,7 @@ function int FindPP(PlayerPawn PP)
 function Mutate(string MutateString, PlayerPawn Sender)
 {
 	local int ID;
+	local string S, SS;
 
 	Super.Mutate(MutateString, Sender);
 
@@ -239,7 +241,7 @@ function Mutate(string MutateString, PlayerPawn Sender)
 	{
 		case "checkpoint":
 			if( Sender.IsA('BTSpectator') && !Sender.IsInState('GameEnded') )
-				BTSpectator(Sender).Suicide();
+				BTSpectator(Sender).ThrowWeapon();
 		break;
 
 		case "lagmover":
@@ -295,7 +297,6 @@ function Mutate(string MutateString, PlayerPawn Sender)
 
 		case "grayskin":
 		case "greyskin":
-		case "blackskin":
 			if( Sender.IsA('TournamentPlayer') )
 			{
 				ID = FindPlayer(Sender);
@@ -311,6 +312,42 @@ function Mutate(string MutateString, PlayerPawn Sender)
 				PI[ID].EPRI.SkinColor = 99;
 				Sender.static.SetMultiSkin(Sender, PI[ID].EPRI.DefaultSkin, PI[ID].EPRI.DefaultFace, Sender.PlayerReplicationInfo.Team);
 			}
+		break;
+
+		case "specghost":
+			if( Sender.IsA('BTSpectator') )
+			{
+				if(BTSpectator(Sender).SpecGhost)
+				{
+					BTSpectator(Sender).bCollideWorld = true;
+					BTSpectator(Sender).SpecGhost = false;
+				}
+				else
+				{
+					BTSpectator(Sender).bCollideWorld = false;
+					BTSpectator(Sender).SpecGhost = true;
+				}
+			}
+		break;
+
+		default:
+		S = ParseDelimited(MutateString, " ", 1);
+		switch(S)
+		{
+			case "specspeed":
+				SS = ParseDelimited(MutateString, " ", 2);
+				if(int(SS) < 0)
+					SS = "0";
+				BTSpectator(Sender).SpecSpeed = int(SS);
+			break;
+
+			case "specview":
+				SS = ParseDelimited(MutateString, " ", 2);
+				if(int(SS) < 0)
+					SS = "0";
+				BTSpectator(Sender).SpecView = int(SS);
+			break;
+		}
 	}
 }
 //====================================
@@ -496,6 +533,39 @@ function string GetLevelName()
 		return Left(Str, Pos);
 	else
 		return Str;
+}
+//====================================
+// ParseDelimited - je weet zelf
+//====================================
+function string ParseDelimited(string Text, string Delimiter, int Count, optional bool bToEndOfLine)
+{
+	local string Result, S;
+	local int Found, i;
+
+	Result = "";
+	Found = 1;
+
+	for(i = 0; i < Len(Text); i++)
+	{
+		S = Mid(Text, i, 1);
+		if(InStr(Delimiter, S) != -1)
+		{
+			if(Found == Count)
+			{
+				if(bToEndOfLine)
+					return Result$Mid(Text, i);
+				else
+					return Result;
+			}
+			Found++;
+		}
+		else
+		{
+			if(Found >= Count)
+				Result = Result $ S;
+		}
+	}
+	return Result;
 }
 //=============================================================================
 // Default Properties
