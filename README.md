@@ -109,10 +109,13 @@ Individual colors
 ### Mutate commands
 Stop F5'ing
 - Mutate ResetView
+
 Spectator move through walls
 - SpecGhost
+
 Spectator fly speed
 - SpecSpeed <number>
+  
 Spectator behindview
 - SpecView <number>
 
