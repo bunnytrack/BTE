@@ -62,7 +62,7 @@ Disable all of the above features
 
 `!Disable`
 
-Toggle - Spectator move through walls
+Toggle on/off Spectator move through walls
 
 `!SpecGhost or !sg`
 
@@ -92,7 +92,7 @@ Skincolors for Players
 
 `!NoSkin`
 
-Toggle - custom Timer
+Toggle on/off custom Timer
 
 `!Timer`
 
@@ -127,7 +127,7 @@ Stop F5'ing
 
 `Mutate ResetView`
 
-Toggle - Spectator move through walls
+Toggle on/off Spectator move through walls
 
 `Mutate SpecGhost`
 
