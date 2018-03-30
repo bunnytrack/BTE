@@ -63,15 +63,19 @@ Disable all of the above features
 `!Disable`
 
 Enable/Disable Spectator move through walls
+
 `!SpecGhost or !sg`
 
 Spectator fly Speed
+
 `!SpecSpeed 1000 or !ss 500`
 
 Spectator behindview distance
+
 `!SpecView 500 or !sv 200`
 
 Spectator wallhack
+
 `!Wallhack or !wh`
 
 Skincolors for Players
@@ -97,11 +101,13 @@ Timer scaling
 `!TimerScale 1 or !tscale 1.5`
 
 Timer Red/Green/Blue colors
+
 `!tc 255 0 255`
 `!tcolor 1 33 7`
 `!tcolour Red Green Blue`
 
 Individual colors
+
 `!TRed 255`
 `!TGreen 0`
 `!TBlue <number between 0 and 255>`
