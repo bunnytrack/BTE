@@ -15,8 +15,11 @@ Configurable settings for the server such as a netspeed limiter and a fix for la
 - Move through walls.
 - Use Teleporters.
 - Voice Taunts.
+- Configurable fly speed.
+- Configurable behindview distance.
 - Say messages can use commands just like players do and have no length limitation anymore.
-- Checkpoint/ThrowWeapon/Suicide key will teleport you to the location that you're aiming at.
+- Checkpoint and ThrowWeapon key will teleport you to the location that you're aiming at.
+- Suicide key will teleport you 1500 units forward.
 - AltFire key (while not viewing a player) will view the closest player at the place that you're aiming at.
 - Jump key (while viewing a player) will release you from the player at the player's location.
 - Console command "chase" will let you view a specific player. (Example: "chase lane" > specs Tamerlane)
@@ -51,10 +54,6 @@ Team colorized playerskins
 
 - !TeamSkin
 
-WallHack only for Spectators
-
-- !WallHack
-
 Speed meter on HUD
 
 - !SpeedMeter or !Speed
@@ -63,7 +62,19 @@ Disable all of the above features
 
 - !Disable
 
-Personal skincolors for Players
+Enable/Disable SpecGhost
+- !SpecGhost or !sg
+
+Fly Speed
+- !SpecSpeed 1000 or !ss 500
+
+Behindview distance
+- !SpecView 500 or !sv 200
+
+See Players and Monsters through walls
+- !Wallhack or !wh
+
+Skincolors for Players
 
 - !RedSkin or !rskin 
 - !BlueSkin or !bskin
@@ -97,6 +108,12 @@ Individual colors
 ### Mutate commands
 Stop F5'ing
 - Mutate ResetView
+Spectator move through walls
+- SpecGhost
+Spectator fly speed
+- SpecSpeed <number>
+Spectator behindview
+- SpecView <number>
 
 ### Netspeed limiter
 The Netspeed limiter prevents players from using unallowed netspeed values.    
