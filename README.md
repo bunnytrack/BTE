@@ -36,88 +36,92 @@ Configurable settings for the server such as a netspeed limiter and a fix for la
 ### Say commands
 Show all Commands / Help
 
-- !BTE or !Help
+`!BTE or !Help`
 
 Make yourself Transparent
 
-- !Ghost
+`!Ghost`
 
 Make everyone Transparent
 
-- !Ghosts
+`!Ghosts`
 
 Show all Triggers
 
-- !ShowTrig
+`!ShowTrig`
 
 Team colorized playerskins
 
-- !TeamSkin
+`!TeamSkin`
 
 Speed meter on HUD
 
-- !SpeedMeter or !Speed
+`!SpeedMeter or !Speed`
 
 Disable all of the above features
 
-- !Disable
+`!Disable`
 
 Enable/Disable Spectator move through walls
-- !SpecGhost or !sg
+`!SpecGhost or !sg`
 
 Spectator fly Speed
-- !SpecSpeed 1000 or !ss 500
+`!SpecSpeed 1000 or !ss 500`
 
 Spectator behindview distance
-- !SpecView 500 or !sv 200
+`!SpecView 500 or !sv 200`
 
 Spectator wallhack
-- !Wallhack or !wh
+`!Wallhack or !wh`
 
 Skincolors for Players
 
-- !RedSkin or !rskin 
-- !BlueSkin or !bskin
-- !GreenSkin or !gskin
-- !YellowSkin or !yskin
-- !BlackSkin or !GraySkin
-- !NoSkin
+`!RedSkin or !rskin `
+`!BlueSkin or !bskin`
+`!GreenSkin or !gskin`
+`!YellowSkin or !yskin`
+`!BlackSkin or !GraySkin`
+`!NoSkin`
 
 Enable/Disable custom Timer
 
-- !Timer
+`!Timer`
 
 Timer location
 
-- !TimerX 400 or !tx -200
-- !TimerY -50 or !ty 250
+`!TimerX 400 or !tx -200`
+`!TimerY -50 or !ty 250`
 
 Timer scaling
 
-- !TimerScale 1 or !tscale 1.5
+`!TimerScale 1 or !tscale 1.5`
 
 Timer Red/Green/Blue colors
-- !tc 255 0 255
-- !tcolor 1 33 7
-- !tcolour Red Green Blue
+`!tc 255 0 255`
+`!tcolor 1 33 7`
+`!tcolour Red Green Blue`
 
 Individual colors
-- !TRed 255
-- !TGreen 0
-- !TBlue <number between 0 and 255>
+`!TRed 255`
+`!TGreen 0`
+`!TBlue <number between 0 and 255>`
 
 ### Mutate commands
 Stop F5'ing
-- Mutate ResetView
+
+`Mutate ResetView`
 
 Spectator move through walls
-- Mutate SpecGhost
+
+`Mutate SpecGhost`
 
 Spectator fly speed
-`- Mutate SpecSpeed <number>`
+
+`Mutate SpecSpeed <number>`
   
 Spectator behindview
-`- Mutate SpecView <number>`
+
+`Mutate SpecView <number>`
 
 ### Netspeed limiter
 The Netspeed limiter prevents players from using unallowed netspeed values.    
