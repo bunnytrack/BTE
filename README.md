@@ -81,10 +81,15 @@ Spectator wallhack
 Skincolors for Players
 
 `!RedSkin or !rskin `
+
 `!BlueSkin or !bskin`
+
 `!GreenSkin or !gskin`
+
 `!YellowSkin or !yskin`
+
 `!BlackSkin or !GraySkin`
+
 `!NoSkin`
 
 Enable/Disable custom Timer
@@ -94,6 +99,7 @@ Enable/Disable custom Timer
 Timer location
 
 `!TimerX 400 or !tx -200`
+
 `!TimerY -50 or !ty 250`
 
 Timer scaling
@@ -103,13 +109,17 @@ Timer scaling
 Timer Red/Green/Blue colors
 
 `!tc 255 0 255`
+
 `!tcolor 1 33 7`
+
 `!tcolour Red Green Blue`
 
 Individual colors
 
 `!TRed 255`
+
 `!TGreen 0`
+
 `!TBlue <number between 0 and 255>`
 
 ### Mutate commands
