@@ -62,16 +62,16 @@ Disable all of the above features
 
 - !Disable
 
-Enable/Disable SpecGhost
+Enable/Disable Spectator move through walls
 - !SpecGhost or !sg
 
-Fly Speed
+Spectator fly Speed
 - !SpecSpeed 1000 or !ss 500
 
-Behindview distance
+Spectator behindview distance
 - !SpecView 500 or !sv 200
 
-See Players and Monsters through walls
+Spectator wallhack
 - !Wallhack or !wh
 
 Skincolors for Players
