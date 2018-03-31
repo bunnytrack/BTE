@@ -335,17 +335,23 @@ function Mutate(string MutateString, PlayerPawn Sender)
 		switch(S)
 		{
 			case "specspeed":
-				SS = ParseDelimited(MutateString, " ", 2);
-				if(int(SS) < 0)
-					SS = "0";
-				BTSpectator(Sender).SpecSpeed = int(SS);
+				if( Sender.IsA('BTSpectator') )
+				{
+					SS = ParseDelimited(MutateString, " ", 2);
+					if(int(SS) < 0)
+						SS = "0";
+					BTSpectator(Sender).SpecSpeed = int(SS);
+				}
 			break;
 
 			case "specview":
-				SS = ParseDelimited(MutateString, " ", 2);
-				if(int(SS) < 0)
-					SS = "0";
-				BTSpectator(Sender).SpecView = int(SS);
+				if( Sender.IsA('BTSpectator') )
+				{
+					SS = ParseDelimited(MutateString, " ", 2);
+					if(int(SS) < 0)
+						SS = "0";
+					BTSpectator(Sender).SpecView = int(SS);
+				}
 			break;
 		}
 	}

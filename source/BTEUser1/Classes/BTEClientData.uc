@@ -2,13 +2,14 @@
 // BTEClient made by OwYeaW
 //=============================================================================
 class BTEClientData expands Info config(BT_Enhancements);
-
 #exec texture IMPORT NAME=TS_0	FILE=TEXTURES\TS_0.PCX	MIPS=OFF
 #exec texture IMPORT NAME=TS_1	FILE=TEXTURES\TS_1.PCX	MIPS=OFF
 #exec texture IMPORT NAME=TS_2	FILE=TEXTURES\TS_2.PCX	MIPS=OFF
 #exec texture IMPORT NAME=TS_3	FILE=TEXTURES\TS_3.PCX	MIPS=OFF
 #exec texture IMPORT NAME=TS_4	FILE=TEXTURES\TS_4.PCX	MIPS=OFF
-
+//=============================================================================
+// Config Variables
+//=============================================================================
 var config bool Enabled;
 var config bool Ghost;
 var config bool Ghosts;
@@ -16,6 +17,8 @@ var config bool TeamSkin;
 var config bool ShowTrig;
 var config bool WallHack;
 var config bool SpeedMeter;
+
+var config byte SkinColor;
 
 var config bool SpecGhost;
 var config int SpecSPeed;
@@ -28,14 +31,16 @@ var config float TimerScale;
 var config byte Red;
 var config byte Green;
 var config byte Blue;
-
-var config byte SkinColor;
-
+//=============================================================================
+// Server Variables
+//=============================================================================
 var byte ServerSkinColor;
 var bool ServerSpecGhost;
 var int ServerSpecSPeed;
 var int ServerSpecView;
-
+//=============================================================================
+// Replication and Tick
+//=============================================================================
 replication
 {
 	reliable if (Role < ROLE_Authority)
@@ -45,17 +50,25 @@ replication
 		GetClientVars;
 }
 
+function Tick(float DeltaTime)
+{
+	if(Owner == None)
+		Destroy();
+}
+//=============================================================================
+// Initialize
+//=============================================================================
 event Spawned()
 {
 	GetClientVars();
 }
-
 simulated function GetClientVars()
 {
-	SetServerSpecVars(SpecGhost, SpecSPeed, SpecView);
-	SetServerSkinColor(SkinColor);
+	if( Pawn(Owner).IsA('Spectator') )
+		SetServerSpecVars(SpecGhost, SpecSPeed, SpecView);
+	else
+		SetServerSkinColor(SkinColor);
 }
-
 function SetServerSpecVars(bool SpecGhost, int SpecSPeed, int SpecView)
 {
 	ServerSpecGhost = SpecGhost;
@@ -63,18 +76,13 @@ function SetServerSpecVars(bool SpecGhost, int SpecSPeed, int SpecView)
 	ServerSpecView = SpecView;
 	PlayerPawn(Owner).Grab();
 }
-
 function SetServerSkinColor(byte C)
 {
 	ServerSkinColor = C;
 }
-
-function Tick(float DeltaTime)
-{
-	if(Owner == None)
-		Destroy();
-}
-
+//=============================================================================
+// Settings Stuff
+//=============================================================================
 simulated function SwitchBool(string BoolName)
 {
     switch(BoolName)
@@ -96,7 +104,6 @@ simulated function SwitchBool(string BoolName)
     }
     SaveConfig();
 }
-
 simulated function TimerSetting(string Setting, float Number)
 {
 	switch(Setting)
@@ -113,23 +120,16 @@ simulated function TimerSetting(string Setting, float Number)
 
 	SaveConfig();
 }
-
 simulated function SpecSetting(string Setting, int Number)
 {
 	switch(Setting)
 	{
-		case "SpecSPeed": SpecSPeed = Number; break;
+		case "SpecSpeed": SpecSPeed = Number; break;
 		case "SpecView": SpecView = Number;
 	}
-	if(!SpecGhost)
-	{
-		SpecGhost = true;
-		SetServerSpecVars(SpecGhost, SpecSPeed, SpecView);
-	}
-
+	SetServerSpecVars(SpecGhost, SpecSPeed, SpecView);
 	SaveConfig();
 }
-
 simulated function SetSkinColor(string Color)
 {
 	switch(Color)
@@ -144,7 +144,6 @@ simulated function SetSkinColor(string Color)
 	SetServerSkinColor(SkinColor);
 	SaveConfig();
 }
-
 //=============================================================================
 // Default Properties
 //=============================================================================
@@ -157,10 +156,10 @@ defaultproperties
 	ShowTrig=False
 	WallHack=False
 	SpeedMeter=False
+	SkinColor=99
 	SpecGhost=True
 	SpecSpeed=300
 	SpecView=180
-	SkinColor=99
 	ServerSkinColor=99
 	CustomTimer=False
 	LocationX=0

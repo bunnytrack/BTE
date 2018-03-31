@@ -84,8 +84,6 @@ ignores SeePlayer, HearNoise, Bump, TakeDamage;
 //=============================================================================
 // 3RD PERSON VIEW STUFF
 //=============================================================================
-// Player view.
-// Compute the rendering viewpoint for the player.
 function CalcBehindView(out vector CameraLocation, out rotator CameraRotation, float Dist)
 {
 	local vector View,HitLocation,HitNormal;

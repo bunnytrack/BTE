@@ -412,7 +412,7 @@ simulated function PostRender(canvas Canvas)
 								SS = ParseDelimited(cmdBuffer, " ", 3);
 								if(int(SS) < 0)
 									SS = "0";
-								BTEC.SpecSetting("SpecSPeed", int(SS));
+								BTEC.SpecSetting("SpecSpeed", int(SS));
 								Pawn(Owner).ConsoleCommand("mutate specspeed " $ int(SS));
 								Pawn(Owner).ClientMessage("Spectator speed set to " $ int(SS));
 							}

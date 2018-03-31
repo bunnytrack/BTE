@@ -14,7 +14,6 @@ var bool bShieldbelt, bChestArmor, bThighArmor, bJumpBoots;
 
 var bool NetSpeedLimiter, KickPlayer, Broadcast, AutoCorrectNetspeed;
 var int CorrectNetspeed, MinimumNetSpeed, MaximumNetSpeed;
-
 //=============================================================================
 // replicating armor + boots from server to clients
 //=============================================================================
